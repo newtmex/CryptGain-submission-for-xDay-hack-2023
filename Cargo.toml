@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "g_token",
+    "g_token/meta",
+]

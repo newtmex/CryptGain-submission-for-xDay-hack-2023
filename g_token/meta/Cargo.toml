@@ -1,0 +1,11 @@
+[package]
+name = "g_token-meta"
+version = "0.0.0"
+edition = "2021"
+publish = false
+[dependencies.g_token]
+path = ".."
+
+[dependencies.multiversx-sc-meta]
+git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"

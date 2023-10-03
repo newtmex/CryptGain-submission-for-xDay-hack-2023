@@ -10,26 +10,30 @@ pub trait PairInteractions: config::Config {
     #[endpoint]
     #[payable("*")]
     fn pair_add_initial_liquidity(&self, g_pair: TokenIdentifier) {
-        let pair_address = self.get_pair_info(&g_pair).address;
+        let pair_info = self.get_pair_info(&g_pair);
         let payments = self.call_value().multi_esdt::<2>();
 
-        // TODO Should the initial lp token be included in the pair info??
-        let (_lp_payment, _first_payment_dust, _second_payment_dust) = self
-            .pair_proxy_obj(pair_address)
+        require!(
+            payments[0].token_identifier == pair_info.tokens.first_token_id,
+            "Invalid first token payment"
+        );
+        require!(
+            payments[1].token_identifier == pair_info.tokens.second_token_id,
+            "Invalid second token payment"
+        );
+
+        let (lp_payment, _first_payment_optimal, second_payment_optimal) = self
+            .pair_proxy_obj(pair_info.address)
             .add_initial_liquidity()
             .with_multi_token_transfer(ManagedVec::from_iter(payments))
             .execute_on_dest_context::<AddLiquidityResultType<Self::Api>>()
             .into_tuple();
 
-        // TODO Should these be added to dust??
-        // self.add_dust(
-        //     &first_payment_dust.token_identifier,
-        //     &first_payment_dust.amount,
-        // );
-        // self.add_dust(
-        //     &second_payment_dust.token_identifier,
-        //     &second_payment_dust.amount,
-        // );
+        // Update GToken supplies and distribution values
+        let g_payment = self.g_token().mint(second_payment_optimal.amount);
+
+        self.add_g_supply(g_pair, &g_payment.amount, lp_payment.amount);
+        self.add_dust(&g_payment.token_identifier, g_payment.amount);
     }
 
     #[proxy]

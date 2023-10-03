@@ -295,7 +295,7 @@ fn mint() {
                     CheckAccount::new()
                         .esdt_balance(LS_TOKEN, "0")
                         .esdt_balance(LSLP_TOKEN, "399,000")
-                        .esdt_balance(G_TOKEN, "0")
+                        .esdt_balance(G_TOKEN, "4,000,000")
                         .esdt_balance(BASE_PAIR, "0"),
                 )
                 .put_account(
@@ -323,7 +323,7 @@ fn mint() {
                         .esdt_balance(LS_TOKEN, "0")
                         .esdt_balance(LSLP_TOKEN, "408,756")
                         .esdt_balance(BASE_PAIR, "2,087")
-                        .esdt_balance(G_TOKEN, "4,760"),
+                        .esdt_balance(G_TOKEN, "4,004,760"),
                 )
                 .put_account(
                     user,
@@ -350,7 +350,7 @@ fn mint() {
                         .esdt_balance(LS_TOKEN, "0")
                         .esdt_balance(LSLP_TOKEN, "418,285")
                         .esdt_balance(BASE_PAIR, "3,971")
-                        .esdt_balance(G_TOKEN, "9,301"),
+                        .esdt_balance(G_TOKEN, "4,009,301"),
                 )
                 .put_account(
                     user,

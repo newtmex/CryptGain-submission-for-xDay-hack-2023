@@ -4,7 +4,6 @@ multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
 use pair::{AddLiquidityResultType, ProxyTrait as _};
-use router::factory::PairTokens;
 
 pub mod config;
 pub mod pair_interactions;
@@ -13,12 +12,6 @@ pub mod slippage;
 
 pub const MIN_MINT_DEPOSIT: u64 = 4_000;
 
-#[derive(TopDecode, TopEncode, NestedDecode, NestedEncode)]
-pub struct PairInfo<M: ManagedTypeApi> {
-    pub tokens: PairTokens<M>,
-    pub address: ManagedAddress<M>,
-}
-
 #[multiversx_sc::contract]
 pub trait GToken:
     pair_interactions::PairInteractions + config::Config + router_interaction::RouterInteraction
@@ -26,10 +19,7 @@ pub trait GToken:
     #[init]
     fn init(&self, router_addr: ManagedAddress, base_pair_id: TokenIdentifier) {
         self.set_router_addr(router_addr);
-
-        if self.base_pair().is_empty() {
-            self.base_pair().set_token_id(base_pair_id);
-        }
+        self.set_base_pair(base_pair_id);
     }
 
     #[only_owner]
@@ -64,15 +54,16 @@ pub trait GToken:
             "Insufficient liquidity deposit"
         );
         g_pair_payment.amount /= 2u64;
+        let g_pair = g_pair_payment.token_identifier.clone();
 
         // TODO add scenario for base pair token
-        let pair_info = self.get_pair_info(&g_pair_payment.token_identifier);
+        let pair_info = self.get_pair_info(&g_pair);
         let call_pair = || self.pair_proxy_obj(pair_info.address.clone());
 
         // Compute base pair payment
         let base_pair_payment = {
             let mut amount_out_min: BigUint<Self::Api> = call_pair()
-                .get_amount_out_view(&g_pair_payment.token_identifier, &g_pair_payment.amount)
+                .get_amount_out_view(&g_pair, &g_pair_payment.amount)
                 .execute_on_dest_context();
             slippage::apply(&mut amount_out_min);
 
@@ -114,23 +105,27 @@ pub trait GToken:
             .execute_on_dest_context::<MultiValue2<EsdtTokenPayment, EsdtTokenPayment>>()
             .into_tuple();
 
-        // g_token_amount to mint is based on the lp position amount of the base pair for the amount of lp tokens received
-        let g_token_amount = if first_token_for_position.token_identifier == base_pair_id {
-            first_token_for_position
-        } else if second_token_for_position.token_identifier == base_pair_id {
-            second_token_for_position
-        } else {
-            sc_panic!("invalid position tokens received")
-        }
-        .amount;
-        // Protocol keeps 5% of g_token_amount for stability
-        let user_amt = &g_token_amount * 95u64 / 100u64;
-        let mint_fee = &g_token_amount - &user_amt;
+        let (g_payment, mint_fee) = {
+            // g_token_amount to mint is based on the lp position amount of the base pair for the amount of lp tokens received
+            let g_token_amount = if first_token_for_position.token_identifier == base_pair_id {
+                first_token_for_position
+            } else if second_token_for_position.token_identifier == base_pair_id {
+                second_token_for_position
+            } else {
+                sc_panic!("invalid position tokens received")
+            }
+            .amount;
+            let mut g_token_payment = self.g_token().mint(g_token_amount);
 
-        let mut g_token_payment = self.g_token().mint(g_token_amount);
-        self.g_token_supply()
-            .update(|old| *old += &g_token_payment.amount);
-        g_token_payment.amount = user_amt;
+            // Update GToken supplies and distribution values
+            let user_amt = self.add_g_supply(g_pair, &g_token_payment.amount, lp_payment.amount);
+            drop(pair_info); // to use after this point, request from storage again;
+
+            let mint_fee = &g_token_payment.amount - &user_amt;
+            g_token_payment.amount = user_amt;
+
+            (g_token_payment, mint_fee)
+        };
 
         // Update dust for all
         self.add_dust(
@@ -141,19 +136,9 @@ pub trait GToken:
             &second_payment_dust.token_identifier,
             second_send_amt - second_payment_dust.amount,
         );
-        self.add_dust(&g_token_payment.token_identifier, mint_fee);
+        self.add_dust(&g_payment.token_identifier, mint_fee);
 
-        self.send().direct_esdt(
-            &caller,
-            &g_token_payment.token_identifier,
-            0,
-            &g_token_payment.amount,
-        );
+        self.send()
+            .direct_esdt(&caller, &g_payment.token_identifier, 0, &g_payment.amount);
     }
-
-    #[storage_mapper("g_token")]
-    fn g_token(&self) -> FungibleTokenMapper;
-
-    #[storage_mapper("g_token_supply")]
-    fn g_token_supply(&self) -> SingleValueMapper<BigUint>;
 }

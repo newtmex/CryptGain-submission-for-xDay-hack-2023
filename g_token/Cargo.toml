@@ -20,6 +20,10 @@ branch = "hackathon-feat"
 git = "https://github.com/newtmex/mx-exchange-sc.git"
 branch = "hackathon-feat"
 
+[dependencies.math]
+git = "https://github.com/newtmex/mx-exchange-sc.git"
+branch = "hackathon-feat"
+
 [dev-dependencies]
 num-bigint = "0.4.2"
 

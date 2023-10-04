@@ -94,3 +94,19 @@ pub(crate) fn run_mint() -> TestSetup {
 fn mint() {
     run_mint();
 }
+
+#[test]
+#[should_panic(expected = "Forbidden use of GToken")]
+fn mint_with_g_token() {
+    let mut setup = TestSetup::new();
+    let user = &setup.add_user_address(0u32.into())[..];
+
+    setup.init_contracts();
+
+    setup
+        .world
+        .set_state_step(
+            SetStateStep::new().put_account(user, Account::new().esdt_balance(G_TOKEN, "20,000")),
+        )
+        .sc_call(g_token_call_step("mint", user).esdt_transfer(G_TOKEN, 0, "10,000"));
+}

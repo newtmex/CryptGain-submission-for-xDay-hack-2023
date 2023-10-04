@@ -60,3 +60,17 @@ fn burn() {
                 ),
         );
 }
+
+#[test]
+#[should_panic(expected = "Forbidden use of GToken")]
+fn burn_requesting_g_token() {
+    let mut setup = mint::run_mint();
+    let user = &setup.users.get(0).unwrap()[..];
+
+    setup.world.sc_call(
+        g_token_call_step("burn", user)
+            .argument(G_TOKEN)
+            .argument("2,50")
+            .esdt_transfer(G_TOKEN, 0, "10,000"),
+    );
+}

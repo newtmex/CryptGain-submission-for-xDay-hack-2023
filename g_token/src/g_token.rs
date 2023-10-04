@@ -230,6 +230,9 @@ pub trait GToken:
             .unwrap_or_else(|| known_pair_id.clone());
         require!(g_pair_id != base_pair_id, "Specify GPair ID");
 
+        let g_token_id = self.g_token().get_token_id();
+        require!(g_pair_id != g_token_id, "Forbidden use of GToken");
+
         (base_pair_id, g_pair_id)
     }
 }

@@ -2,8 +2,7 @@ use multiversx_sc_scenario::scenario_model::{CheckAccount, CheckStateStep};
 
 use super::*;
 
-#[test]
-fn mint() {
+pub(crate) fn run_mint() -> TestSetup {
     let mut setup = TestSetup::new();
     let user = &setup.add_user_address(0u32.into())[..];
 
@@ -87,4 +86,11 @@ fn mint() {
                         .esdt_balance(G_TOKEN, "176,882"),
                 ),
         );
+
+    setup
+}
+
+#[test]
+fn mint() {
+    run_mint();
 }

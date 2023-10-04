@@ -7,8 +7,55 @@ multiversx_sc::derive_imports!();
 pub struct PairInfo<M: ManagedTypeApi> {
     pub g_token_supply: BigUint<M>,
     pub lp_token_supply: BigUint<M>,
+    pub lp_token_id: TokenIdentifier<M>,
     pub tokens: PairTokens<M>,
     pub address: ManagedAddress<M>,
+}
+
+impl<M: ManagedTypeApi> PairInfo<M> {
+    pub fn new(tokens: PairTokens<M>, address: ManagedAddress<M>) -> Self {
+        Self {
+            g_token_supply: 0u32.into(),
+            lp_token_supply: 0u32.into(),
+            lp_token_id: Self::placeholder_lp_id(),
+            tokens,
+            address,
+        }
+    }
+
+    pub fn check_lp_id(&self, token_id: &TokenIdentifier<M>) -> bool {
+        &self.lp_token_id == token_id
+    }
+
+    /// - Reduces supply of `LP Token` and `GToken`,
+    /// - Returns `LP Payment`
+    fn take_tokens_from_supply(&mut self, g_amount: &BigUint<M>) -> EsdtTokenPayment<M> {
+        if g_amount > &self.g_token_supply {
+            M::error_api_impl().signal_error(b"GToken amount too large")
+        }
+
+        let lp_amount = g_amount * &self.lp_token_supply / &self.g_token_supply;
+
+        self.lp_token_supply -= &lp_amount;
+        self.g_token_supply -= g_amount;
+
+        (self.lp_token_id.clone(), 0, lp_amount).into()
+    }
+
+    fn placeholder_lp_id() -> TokenIdentifier<M> {
+        TokenIdentifier::from("Pending")
+    }
+
+    /// The first token that is checked becomes the lp_token_id
+    fn set_or_check_lp_id(&mut self, token_id: &TokenIdentifier<M>) -> bool {
+        if self.lp_token_id == Self::placeholder_lp_id() {
+            self.lp_token_id = token_id.clone();
+
+            return true;
+        }
+
+        self.check_lp_id(token_id)
+    }
 }
 
 type GRatio = u16;
@@ -35,22 +82,46 @@ pub trait Config {
         self.token_dust(token_id).update(|old| *old += amt);
     }
 
-    /// Returns user amount
+    /// Returns user GToken amount
     fn add_g_supply(
         &self,
         g_pair: TokenIdentifier,
         g_supply: &BigUint,
-        lp_supply: BigUint,
+        lp_payment: EsdtTokenPayment,
     ) -> BigUint {
         let user_fee_ratio = FEE_DIVISION_CONSTANT - self.pair_fee_ratio(&g_pair);
 
         self.g_token_supply().update(|old| *old += g_supply);
         self.pair_map().entry(g_pair).and_modify(|pair_info| {
             pair_info.g_token_supply += g_supply;
-            pair_info.lp_token_supply += lp_supply;
+
+            require!(
+                pair_info.set_or_check_lp_id(&lp_payment.token_identifier),
+                "Pair lp token id missmatch"
+            );
+            pair_info.lp_token_supply += lp_payment.amount;
         });
 
         g_supply * user_fee_ratio / FEE_DIVISION_CONSTANT
+    }
+
+    /// Returns LP Payment
+    fn remove_g_supply(
+        &self,
+        g_pair: TokenIdentifier,
+        g_token_payment: EsdtTokenPayment,
+    ) -> EsdtTokenPayment {
+        let (_, __, g_token_amount) = g_token_payment.into_tuple();
+
+        self.g_token().burn(&g_token_amount);
+        self.g_token_supply().update(|old| *old -= &g_token_amount);
+
+        let mut lp_payment = None;
+        self.pair_map().entry(g_pair).and_modify(|pair_info| {
+            lp_payment = Some(pair_info.take_tokens_from_supply(&g_token_amount))
+        });
+
+        lp_payment.unwrap_or_else(|| sc_panic!("Unable to make LP token payment"))
     }
 
     fn set_base_pair(&self, token_id: TokenIdentifier) {

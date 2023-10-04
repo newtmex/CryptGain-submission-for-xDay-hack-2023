@@ -3,10 +3,7 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use pair::{
-    AddLiquidityResultType, ProxyTrait as _, SwapTokensFixedInputResultType,
-    SwapTokensFixedOutputResultType,
-};
+use pair::{AddLiquidityResultType, ProxyTrait as _, RemoveLiquidityResultType};
 
 pub mod config;
 pub mod pair_interactions;
@@ -48,7 +45,6 @@ pub trait GToken:
     #[payable("*")]
     fn mint(&self, opt_g_pair: OptionalValue<TokenIdentifier>) {
         let caller = self.blockchain().get_caller();
-        let base_pair_id = self.base_pair().get_token_id();
 
         // Set payment swap amount
         let mut sent_payment = self.call_value().single_esdt();
@@ -58,13 +54,8 @@ pub trait GToken:
         );
         sent_payment.amount /= 2u64;
 
-        let g_pair_id = opt_g_pair
-            .into_option()
-            .unwrap_or_else(|| sent_payment.token_identifier.clone());
-        require!(
-            g_pair_id != base_pair_id,
-            "Specify GPair ID when minting with base pair"
-        );
+        let (base_pair_id, g_pair_id) =
+            self.get_base_and_g_pair_id(opt_g_pair, &sent_payment.token_identifier);
 
         let pair_info = self.get_pair_info(&g_pair_id);
         let call_pair = || self.pair_proxy_obj(pair_info.address.clone());
@@ -76,17 +67,13 @@ pub trait GToken:
         slippage::apply(&mut amount_out);
 
         let (first_payment, second_payment) = if sent_payment.token_identifier == base_pair_id {
-            let g_pair_payment = call_pair()
-                .swap_tokens_fixed_input(&g_pair_id, amount_out)
-                .with_esdt_transfer(sent_payment.clone())
-                .execute_on_dest_context::<SwapTokensFixedInputResultType<Self::Api>>();
+            let g_pair_payment =
+                self.pair_swap_fixed_input(&g_pair_id, amount_out, sent_payment.clone(), call_pair);
 
             (g_pair_payment, sent_payment)
         } else {
-            let (base_pair_payment, g_pair_payment_dust) = call_pair()
-                .swap_tokens_fixed_output(&base_pair_id, amount_out)
-                .with_esdt_transfer(sent_payment.clone())
-                .execute_on_dest_context::<SwapTokensFixedOutputResultType<Self::Api>>()
+            let (base_pair_payment, g_pair_payment_dust) = self
+                .pair_swap_fixed_output(&base_pair_id, amount_out, sent_payment.clone(), call_pair)
                 .into_tuple();
 
             self.add_dust(
@@ -115,9 +102,8 @@ pub trait GToken:
             .execute_on_dest_context::<AddLiquidityResultType<Self::Api>>()
             .into_tuple();
 
-        let (first_token_for_position, second_token_for_position) = call_pair()
-            .get_tokens_for_given_position(&lp_payment.amount)
-            .execute_on_dest_context::<MultiValue2<EsdtTokenPayment, EsdtTokenPayment>>()
+        let (first_token_for_position, second_token_for_position) = self
+            .pair_get_tokens_for_given_position(&lp_payment.amount, call_pair)
             .into_tuple();
 
         let (g_payment, mint_fee) = {
@@ -133,7 +119,7 @@ pub trait GToken:
             let mut g_token_payment = self.g_token().mint(g_token_amount);
 
             // Update GToken supplies and distribution values
-            let user_amt = self.add_g_supply(g_pair_id, &g_token_payment.amount, lp_payment.amount);
+            let user_amt = self.add_g_supply(g_pair_id, &g_token_payment.amount, lp_payment);
             drop(pair_info); // to use after this point, request from storage again;
 
             let mint_fee = &g_token_payment.amount - &user_amt;
@@ -155,5 +141,95 @@ pub trait GToken:
 
         self.send()
             .direct_esdt(&caller, &g_payment.token_identifier, 0, &g_payment.amount);
+    }
+
+    #[endpoint]
+    #[payable("*")]
+    fn burn(
+        &self,
+        receipt_token_id: TokenIdentifier,
+        slippage: u64,
+        opt_g_pair: OptionalValue<TokenIdentifier>,
+    ) {
+        let caller = self.blockchain().get_caller();
+        let (_base_pair_id, g_pair_id) = self.get_base_and_g_pair_id(opt_g_pair, &receipt_token_id);
+
+        let pair_info = self.get_pair_info(&g_pair_id);
+        let call_pair = || self.pair_proxy_obj(pair_info.address.clone());
+
+        let g_token_payment = self.call_value().single_esdt();
+        self.g_token()
+            .require_same_token(&g_token_payment.token_identifier);
+        // TODO add othe risk management checks like the max % that can be withdrawn per period (blocks, timestamp range, epochs ??)
+        require!(
+            g_token_payment.amount <= pair_info.g_token_supply,
+            "GToken burn amount exceeded for pair",
+        );
+
+        let lp_payment = self.remove_g_supply(g_pair_id, g_token_payment);
+        let (first_token_for_position, second_token_for_position) = call_pair()
+            .get_tokens_for_given_position(&lp_payment.amount)
+            .execute_on_dest_context::<MultiValue2<EsdtTokenPayment, EsdtTokenPayment>>()
+            .into_tuple();
+
+        let apply_slippage =
+            |amt: &BigUint<Self::Api>| slippage::from_ref_user_defined(amt, slippage);
+
+        let first_token_amount_min = apply_slippage(&first_token_for_position.amount);
+        let second_token_amount_min = apply_slippage(&second_token_for_position.amount);
+        let (first_token_received, second_token_received) = call_pair()
+            .remove_liquidity(first_token_amount_min, second_token_amount_min)
+            .with_esdt_transfer(lp_payment)
+            .execute_on_dest_context::<RemoveLiquidityResultType<Self::Api>>()
+            .into_tuple();
+
+        // Swap other_token_payment to requested token
+        let receipt_token_payment = {
+            let (mut receipt_token_payment, other_token_payment) =
+                if first_token_received.token_identifier == receipt_token_id {
+                    (first_token_received, second_token_received)
+                } else if second_token_received.token_identifier == receipt_token_id {
+                    (second_token_received, first_token_received)
+                } else {
+                    sc_panic!("Unexpected liquidity tokens received")
+                };
+
+            let amount_out_min = apply_slippage(&receipt_token_payment.amount);
+            let (swapped_id, _, swapped_amount) = self
+                .pair_swap_fixed_input(
+                    &receipt_token_payment.token_identifier,
+                    amount_out_min,
+                    other_token_payment,
+                    call_pair,
+                )
+                .into_tuple();
+            require!(
+                swapped_id == receipt_token_payment.token_identifier,
+                "Swapped token receipt token missmatch"
+            );
+            receipt_token_payment.amount += swapped_amount;
+
+            receipt_token_payment
+        };
+
+        let (receipt_identifier, receipt_nonce, receipt_amount) =
+            receipt_token_payment.into_tuple();
+        self.send()
+            .direct_esdt(&caller, &receipt_identifier, receipt_nonce, &receipt_amount);
+    }
+
+    fn get_base_and_g_pair_id(
+        &self,
+        opt_g_pair: OptionalValue<TokenIdentifier>,
+        known_pair_id: &TokenIdentifier,
+    ) -> (TokenIdentifier, TokenIdentifier) {
+        let base_pair_id = self.base_pair().get_token_id();
+
+        let g_pair_id = opt_g_pair
+            .into_option()
+            .unwrap_or_else(|| known_pair_id.clone());
+        require!(g_pair_id != base_pair_id, "Specify GPair ID");
+
+        (base_pair_id, g_pair_id)
     }
 }

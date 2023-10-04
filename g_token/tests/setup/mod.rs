@@ -1,3 +1,4 @@
+pub mod burn;
 pub mod mint;
 pub mod mint_with_base_pair;
 

@@ -25,15 +25,13 @@ pub trait RouterInteraction: config::Config {
             .pair_map()
             .insert(
                 g_pair.clone(),
-                config::PairInfo {
-                    tokens: PairTokens {
+                config::PairInfo::new(
+                    PairTokens {
                         first_token_id: g_pair,
                         second_token_id: base_pair,
                     },
                     address,
-                    g_token_supply: 0u32.into(),
-                    lp_token_supply: 0u32.into(),
-                },
+                ),
             )
             .is_none();
 

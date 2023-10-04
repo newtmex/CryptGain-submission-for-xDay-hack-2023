@@ -1,4 +1,7 @@
-use pair::{AddLiquidityResultType, ProxyTrait as _};
+use pair::{
+    AddLiquidityResultType, ProxyTrait as _, SwapTokensFixedInputResultType,
+    SwapTokensFixedOutputResultType,
+};
 
 use crate::config;
 
@@ -32,8 +35,44 @@ pub trait PairInteractions: config::Config {
         // Update GToken supplies and distribution values
         let g_payment = self.g_token().mint(second_payment_optimal.amount);
 
-        self.add_g_supply(g_pair, &g_payment.amount, lp_payment.amount);
+        self.add_g_supply(g_pair, &g_payment.amount, lp_payment);
         self.add_dust(&g_payment.token_identifier, g_payment.amount);
+    }
+
+    fn pair_swap_fixed_input(
+        &self,
+        token_out: &TokenIdentifier,
+        amount_out_min: BigUint,
+        payment: EsdtTokenPayment,
+        call_pair: impl Fn() -> pair::Proxy<Self::Api>,
+    ) -> SwapTokensFixedInputResultType<Self::Api> {
+        call_pair()
+            .swap_tokens_fixed_input(token_out, amount_out_min)
+            .with_esdt_transfer(payment)
+            .execute_on_dest_context()
+    }
+
+    fn pair_swap_fixed_output(
+        &self,
+        token_out: &TokenIdentifier,
+        amount_out: BigUint,
+        payment: EsdtTokenPayment,
+        call_pair: impl Fn() -> pair::Proxy<Self::Api>,
+    ) -> SwapTokensFixedOutputResultType<Self::Api> {
+        call_pair()
+            .swap_tokens_fixed_output(token_out, amount_out)
+            .with_esdt_transfer(payment)
+            .execute_on_dest_context()
+    }
+
+    fn pair_get_tokens_for_given_position(
+        &self,
+        amount: &BigUint,
+        call_pair: impl Fn() -> pair::Proxy<Self::Api>,
+    ) -> MultiValue2<EsdtTokenPayment, EsdtTokenPayment> {
+        call_pair()
+            .get_tokens_for_given_position(amount)
+            .execute_on_dest_context::<MultiValue2<EsdtTokenPayment, EsdtTokenPayment>>()
     }
 
     #[proxy]

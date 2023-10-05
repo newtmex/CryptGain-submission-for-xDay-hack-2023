@@ -43,7 +43,7 @@ pub trait GToken:
 
     #[endpoint]
     #[payable("*")]
-    fn mint(&self, opt_g_pair: OptionalValue<TokenIdentifier>) {
+    fn mint(&self, slippage: u64, opt_g_pair: OptionalValue<TokenIdentifier>) {
         let caller = self.blockchain().get_caller();
 
         // Set payment swap amount
@@ -64,7 +64,7 @@ pub trait GToken:
         let mut amount_out: BigUint<Self::Api> = call_pair()
             .get_amount_out_view(&sent_payment.token_identifier, &sent_payment.amount)
             .execute_on_dest_context();
-        slippage::apply(&mut amount_out);
+        slippage::apply(&mut amount_out, slippage);
 
         let (first_payment, second_payment) = if sent_payment.token_identifier == base_pair_id {
             let g_pair_payment =
@@ -87,7 +87,7 @@ pub trait GToken:
         let first_token_sent_amt = first_payment.amount.clone();
         let second_token_sent_amt = second_payment.amount.clone();
 
-        let first_token_amount_min = slippage::from_ref(&first_payment.amount);
+        let first_token_amount_min = slippage::from_ref(&first_payment.amount, slippage);
         let second_token_amount_min = call_pair()
             .get_equivalent(&first_payment.token_identifier, &first_token_amount_min)
             .execute_on_dest_context::<BigUint<Self::Api>>();
@@ -173,7 +173,7 @@ pub trait GToken:
             .into_tuple();
 
         let apply_slippage =
-            |amt: &BigUint<Self::Api>| slippage::from_ref_user_defined(amt, slippage);
+            |amt: &BigUint<Self::Api>| slippage::from_ref(amt, slippage);
 
         let first_token_amount_min = apply_slippage(&first_token_for_position.amount);
         let second_token_amount_min = apply_slippage(&second_token_for_position.amount);

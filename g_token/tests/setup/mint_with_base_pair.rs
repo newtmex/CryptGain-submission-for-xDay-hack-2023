@@ -40,6 +40,7 @@ fn mint_with_base_pair() {
                 .from(user)
                 .to(G_TOKEN_ADDR)
                 .function("mint")
+                .argument("1,50")
                 .argument(LS_TOKEN)
                 .esdt_transfer(BASE_PAIR, 0, "20,000"),
         )
@@ -68,6 +69,7 @@ fn mint_with_base_pair() {
                 .from(user)
                 .to(G_TOKEN_ADDR)
                 .function("mint")
+                .argument("1,50")
                 .argument(LS_TOKEN)
                 .esdt_transfer(BASE_PAIR, 0, "20,000"),
         )

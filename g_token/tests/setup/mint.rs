@@ -38,6 +38,7 @@ pub(crate) fn run_mint() -> TestSetup {
                 .from(user)
                 .to(G_TOKEN_ADDR)
                 .function("mint")
+                .argument("1,50")
                 .esdt_transfer(LS_TOKEN, 0, "20,000"),
         )
         .check_state_step(
@@ -65,6 +66,7 @@ pub(crate) fn run_mint() -> TestSetup {
                 .from(user)
                 .to(G_TOKEN_ADDR)
                 .function("mint")
+                .argument("1,50")
                 .esdt_transfer(LS_TOKEN, 0, "20,000"),
         )
         .check_state_step(
@@ -108,5 +110,9 @@ fn mint_with_g_token() {
         .set_state_step(
             SetStateStep::new().put_account(user, Account::new().esdt_balance(G_TOKEN, "20,000")),
         )
-        .sc_call(g_token_call_step("mint", user).esdt_transfer(G_TOKEN, 0, "10,000"));
+        .sc_call(
+            g_token_call_step("mint", user)
+                .argument("1,50")
+                .esdt_transfer(G_TOKEN, 0, "10,000"),
+        );
 }

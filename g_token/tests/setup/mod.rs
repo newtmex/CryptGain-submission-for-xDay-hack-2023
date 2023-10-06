@@ -9,7 +9,7 @@ pub use multiversx_sc_scenario::{
     scenario_model::{Account, BytesKey, BytesValue, ScCallStep, ScDeployStep, SetStateStep},
     ScenarioWorld,
 };
-use test_utils::block_state::BlockState;
+use test_utils::{block_state::BlockState, helpers::update_sc_acc};
 
 // Wasm Files
 pub const G_TOKEN_WASM: &str = "file:../output/g_token.wasm";
@@ -34,20 +34,6 @@ fn g_token_call_step(func: &str, address: &str) -> ScCallStep {
     .to(G_TOKEN_ADDR)
     .function(func)
     .from(address)
-}
-
-fn update_sc_acc<K, V>(code: &BytesValue, storage_values: Vec<(K, V)>) -> Account
-where
-    K: Into<BytesKey>,
-    V: Into<BytesValue>,
-{
-    let mut account_state = Account::new().update(true).code(code);
-
-    for (key, value) in storage_values {
-        account_state.storage.insert(key.into(), value.into());
-    }
-
-    account_state
 }
 
 pub struct TestSetup {

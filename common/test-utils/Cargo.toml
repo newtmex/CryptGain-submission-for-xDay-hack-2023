@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies.multiversx-sc-scenario]
 git = "https://github.com/newtmex/mx-sdk-rs.git"
 branch = "hackathon-feat"
+
+[dependencies]
+num-bigint = "0.4.2"

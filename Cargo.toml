@@ -3,4 +3,7 @@
 members = [
     "g_token",
     "g_token/meta",
+   
+    "liquid-staking",
+    "liquid-staking/meta",
 ]

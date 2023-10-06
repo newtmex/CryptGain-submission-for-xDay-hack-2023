@@ -1,0 +1,33 @@
+[package]
+name = "liquid-staking"
+version = "0.0.0"
+authors = ["you"]
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/liquid_staking.rs"
+
+[dependencies.multiversx-sc]
+git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"
+
+[dependencies.multiversx-sc-modules]
+git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"
+
+[dependencies.dsc_module]
+path = "../common/dsc_module"
+
+[dev-dependencies]
+num-bigint = "0.4.2"
+test-utils = { path = "../common/test-utils" }
+hex = "0.4"
+
+[dev-dependencies.multiversx-sc-scenario]
+git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"
+
+[dev-dependencies.delegation_latest_full]
+git = "https://github.com/newtmex/sc-delegation-rs.git"
+branch = "hackathon-feat"

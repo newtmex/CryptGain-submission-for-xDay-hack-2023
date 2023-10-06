@@ -1,0 +1,30 @@
+[package]
+name = "fuzz"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.g_token]
+path = "../g_token"
+
+[dependencies.multiversx-sc]
+git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"
+
+[dependencies.pair]
+git = "https://github.com/newtmex/mx-exchange-sc.git"
+branch = "hackathon-feat"
+
+[dependencies.router]
+git = "https://github.com/newtmex/mx-exchange-sc.git"
+branch = "hackathon-feat"
+
+[dependencies.multiversx-sc-scenario]
+git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"
+
+[dependencies]
+num-bigint = "0.4.2"
+rand = "0.8.5"
+rayon = "1.8"

@@ -64,7 +64,7 @@ type GRatio = u16;
 pub struct GRatioExtreme<M: ManagedTypeApi>(TokenIdentifier<M>, GRatio);
 
 /// One to three decimal places
-const G_RATIO_BALANCE_FACTOR: GRatio = 1_000;
+pub const G_RATIO_BALANCE_FACTOR: GRatio = 1_000;
 
 /// 0.10%
 const MIN_FEE: u32 = 10;

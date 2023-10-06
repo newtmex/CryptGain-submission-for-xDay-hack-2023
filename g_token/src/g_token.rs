@@ -66,31 +66,54 @@ pub trait GToken:
             .execute_on_dest_context();
         slippage::apply(&mut amount_out, slippage);
 
-        let (first_payment, second_payment) = if sent_payment.token_identifier == base_pair_id {
+        let compute_amounts_min = |token_payment: &EsdtTokenPayment| {
+            let token_amount_min = slippage::from_ref(&token_payment.amount, slippage);
+            let other_amount_min = call_pair()
+                .get_equivalent(&token_payment.token_identifier, &token_amount_min)
+                .execute_on_dest_context::<BigUint>();
+            require!(
+                token_amount_min > 0 && other_amount_min > 0,
+                "Invalid slippage, sent amount combination"
+            );
+
+            (token_amount_min, other_amount_min)
+        };
+        
+        let (
+            //
+            (first_payment, first_token_amount_min),
+            (second_payment, second_token_amount_min),
+        ) = if sent_payment.token_identifier == base_pair_id {
             let g_pair_payment =
                 self.pair_swap_fixed_input(&g_pair_id, amount_out, sent_payment.clone(), call_pair);
 
-            (g_pair_payment, sent_payment)
+            let (g_pair_amount_min, sent_pair_amount_min) = compute_amounts_min(&g_pair_payment);
+
+            (
+                (g_pair_payment, g_pair_amount_min),
+                (sent_payment, sent_pair_amount_min),
+            )
         } else {
             let (base_pair_payment, g_pair_payment_dust) = self
                 .pair_swap_fixed_output(&base_pair_id, amount_out, sent_payment.clone(), call_pair)
                 .into_tuple();
+
+            let (base_pair_amount_min, sent_pair_amount_min) =
+                compute_amounts_min(&base_pair_payment);
 
             self.add_dust(
                 &g_pair_payment_dust.token_identifier,
                 g_pair_payment_dust.amount,
             );
 
-            (sent_payment, base_pair_payment)
+            (
+                (sent_payment, sent_pair_amount_min),
+                (base_pair_payment, base_pair_amount_min),
+            )
         };
 
         let first_token_sent_amt = first_payment.amount.clone();
         let second_token_sent_amt = second_payment.amount.clone();
-
-        let first_token_amount_min = slippage::from_ref(&first_payment.amount, slippage);
-        let second_token_amount_min = call_pair()
-            .get_equivalent(&first_payment.token_identifier, &first_token_amount_min)
-            .execute_on_dest_context::<BigUint<Self::Api>>();
         let (
             //
             lp_payment,
@@ -160,7 +183,7 @@ pub trait GToken:
         let g_token_payment = self.call_value().single_esdt();
         self.g_token()
             .require_same_token(&g_token_payment.token_identifier);
-        // TODO add othe risk management checks like the max % that can be withdrawn per period (blocks, timestamp range, epochs ??)
+        // TODO add other risk management checks like the max % that can be withdrawn per period (blocks, timestamp range, epochs ??)
         require!(
             g_token_payment.amount <= pair_info.g_token_supply,
             "GToken burn amount exceeded for pair",
@@ -172,8 +195,7 @@ pub trait GToken:
             .execute_on_dest_context::<MultiValue2<EsdtTokenPayment, EsdtTokenPayment>>()
             .into_tuple();
 
-        let apply_slippage =
-            |amt: &BigUint<Self::Api>| slippage::from_ref(amt, slippage);
+        let apply_slippage = |amt: &BigUint<Self::Api>| slippage::from_ref(amt, slippage);
 
         let first_token_amount_min = apply_slippage(&first_token_for_position.amount);
         let second_token_amount_min = apply_slippage(&second_token_for_position.amount);
@@ -223,15 +245,15 @@ pub trait GToken:
         opt_g_pair: OptionalValue<TokenIdentifier>,
         known_pair_id: &TokenIdentifier,
     ) -> (TokenIdentifier, TokenIdentifier) {
+        let g_token_id = self.g_token().get_token_id();
+        require!(known_pair_id != &g_token_id, "Forbidden use of GToken");
+
         let base_pair_id = self.base_pair().get_token_id();
 
         let g_pair_id = opt_g_pair
             .into_option()
             .unwrap_or_else(|| known_pair_id.clone());
         require!(g_pair_id != base_pair_id, "Specify GPair ID");
-
-        let g_token_id = self.g_token().get_token_id();
-        require!(g_pair_id != g_token_id, "Forbidden use of GToken");
 
         (base_pair_id, g_pair_id)
     }

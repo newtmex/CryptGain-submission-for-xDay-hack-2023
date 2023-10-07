@@ -40,14 +40,6 @@ pub trait LiquidityPoolModule:
     #[storage_mapper("ls_token")]
     fn ls_token(&self) -> FungibleTokenMapper<Self::Api>;
 
-    #[view(getLsSupply)]
-    #[storage_mapper("ls_token_supply")]
-    fn ls_token_supply(&self) -> SingleValueMapper<BigUint>;
-
     #[storage_mapper("delegated_egld")]
     fn delegated_egld(&self) -> SingleValueMapper<BigUint>;
-
-    #[view(getRewardPerShare)]
-    #[storage_mapper("reward_per_share")]
-    fn reward_per_share(&self) -> SingleValueMapper<BigUint>;
 }

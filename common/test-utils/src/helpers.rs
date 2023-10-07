@@ -1,7 +1,8 @@
 use std::ops::Mul;
 
 use multiversx_sc_scenario::scenario_model::{
-    Account, BytesKey, BytesValue, CheckAccount, CheckEsdtMap, CheckStorage, CheckStorageDetails, CheckStateStep, CheckAccounts,
+    Account, BytesKey, BytesValue, CheckAccount, CheckAccounts, CheckEsdtMap, CheckStateStep,
+    CheckStorage, CheckStorageDetails, CheckValue,
 };
 
 pub fn big_num_pow_18(num: u32) -> num_bigint::BigUint {
@@ -22,8 +23,9 @@ where
     account_state
 }
 
-pub fn check_account_allow_other_storages() -> CheckAccount {
+pub fn check_account_allow_other_storages(owner: &str) -> CheckAccount {
     CheckAccount {
+        owner: CheckValue::Equal(owner.into()),
         esdt: CheckEsdtMap::Star,
         storage: CheckStorage::Equal(CheckStorageDetails {
             other_storages_allowed: true,

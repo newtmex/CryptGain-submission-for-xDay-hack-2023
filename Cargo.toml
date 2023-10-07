@@ -6,4 +6,10 @@ members = [
    
     "liquid-staking",
     "liquid-staking/meta",
+   
+    "akf-mock",
+    "akf-mock/meta",
+   
+    "delegation-proxy-mock",
+    "delegation-proxy-mock/meta",
 ]

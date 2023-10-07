@@ -63,14 +63,11 @@ fn add_liquidity() {
                     )
                     .put_account(
                         LS_ADDR,
-                        CheckAccount {
-                            owner: CheckValue::Equal(OWNER.into()),
-                            ..check_account_allow_other_storages()
-                        }
-                        .balance(liq_amount_str)
-                        .check_storage("str:ls_token_supply", liq_amount_str)
-                        .check_storage("str:delegated_egld", liq_amount_str)
-                        .check_storage("str:pending_delegation", liq_amount_str),
+                        check_account_allow_other_storages(OWNER)
+                            .balance(liq_amount_str)
+                            .check_storage("str:ls_token_supply", liq_amount_str)
+                            .check_storage("str:delegated_egld", liq_amount_str)
+                            .check_storage("str:pending_delegation", liq_amount_str),
                     ),
                 );
 
@@ -92,7 +89,7 @@ fn add_liquidity() {
 
                 let mut rps = ManagedBuffer::<DebugApi>::new();
                 add_liq_result.0.top_encode(&mut rps).unwrap();
-                
+
                 let mut ls_token = ManagedBuffer::<DebugApi>::new();
                 add_liq_result.1.top_encode(&mut ls_token).unwrap();
 
@@ -128,14 +125,11 @@ fn add_liquidity() {
                     )
                     .put_account(
                         LS_ADDR,
-                        CheckAccount {
-                            owner: CheckValue::Equal(OWNER.into()),
-                            ..check_account_allow_other_storages()
-                        }
-                        .balance("0")
-                        .check_storage("str:ls_token_supply", final_liq_amount_str)
-                        .check_storage("str:delegated_egld", final_liq_amount_str)
-                        .check_storage("str:pending_delegation", "0"),
+                        check_account_allow_other_storages(OWNER)
+                            .balance("0")
+                            .check_storage("str:ls_token_supply", final_liq_amount_str)
+                            .check_storage("str:delegated_egld", final_liq_amount_str)
+                            .check_storage("str:pending_delegation", "0"),
                     ),
                 );
         },

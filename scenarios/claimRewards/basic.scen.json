@@ -1,5 +1,5 @@
 {
-    "name": "Add liquidity scenario",
+    "name": "Claim rewards by simulating the right conditions",
     "steps": [
         {
             "step": "setState",
@@ -143,60 +143,15 @@
             }
         },
         {
-            "step": "scCall",
-            "id": "addLiquidity-with-lt-1eGLD",
-            "tx": {
-                "from": "address:owner",
-                "to": "sc:ls",
-                "egldValue": "10000000000000000",
-                "function": "addLiquidity",
-                "arguments": [
-                    "10000000000000000"
-                ],
-                "gasLimit": "5,000,000",
-                "gasPrice": ""
-            },
-            "expect": {
-                "out": [
-                    "0x",
-                    "0x0000000a4c53542d3132333435360000000000000000000000072386f26fc10000"
-                ],
-                "status": "0"
-            }
-        },
-        {
-            "step": "checkState",
-            "comment": "users-can-add-sub-1eGLD-as-liquidity",
+            "step": "setState",
             "accounts": {
-                "address:owner": {
-                    "nonce": "6",
-                    "balance": "99999990000000000000000",
-                    "esdt": {
-                        "str:LST-123456": "10000000000000000",
-                        "+": ""
-                    },
-                    "storage": "*",
-                    "code": "*",
-                    "owner": "*"
-                },
-                "sc:ls": {
-                    "balance": "10000000000000000",
-                    "esdt": "*",
-                    "storage": {
-                        "str:delegated_egld": "10000000000000000",
-                        "str:ls_token_supply": "10000000000000000",
-                        "str:pending_delegation": "10000000000000000",
-                        "+": ""
-                    },
-                    "code": "*",
-                    "owner": "address:owner"
-                },
-                "+": ""
+                "address:ref": {},
+                "address:user": {}
             }
         },
         {
             "step": "scCall",
-            "id": "addLiquidity-trigger-delegate-to-dsc",
+            "id": "addLiquidity-before-claim",
             "tx": {
                 "from": "address:owner",
                 "to": "sc:ls",
@@ -205,7 +160,7 @@
                 "arguments": [
                     "1000000000000000000"
                 ],
-                "gasLimit": "45,000,000",
+                "gasLimit": "50,000,000",
                 "gasPrice": ""
             },
             "expect": {
@@ -213,38 +168,88 @@
                     "0x",
                     "0x0000000a4c53542d3132333435360000000000000000000000080de0b6b3a7640000"
                 ],
-                "status": "0",
-                "refund": "37000"
+                "status": "0"
             }
         },
         {
-            "step": "checkState",
-            "comment": "all-pending-delegations-should-be-cleared",
-            "accounts": {
-                "address:owner": {
-                    "nonce": "7",
-                    "balance": "99998990000000000000000",
-                    "esdt": {
-                        "str:LST-123456": "1010000000000000000",
-                        "+": ""
-                    },
-                    "storage": "*",
-                    "code": "*",
-                    "owner": "*"
-                },
-                "sc:ls": {
-                    "balance": "0",
-                    "esdt": "*",
-                    "storage": {
-                        "str:delegated_egld": "1010000000000000000",
-                        "str:ls_token_supply": "1010000000000000000",
-                        "str:pending_delegation": "0",
-                        "+": ""
-                    },
-                    "code": "*",
-                    "owner": "address:owner"
-                },
-                "+": ""
+            "step": "scCall",
+            "id": "simulate-rewards-topup",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "egldValue": "1000000000000",
+                "function": "topUpRewards",
+                "arguments": [],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "claimRewards-no-referrer",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "function": "claim_reward",
+                "arguments": [
+                    "address:user",
+                    "1",
+                    "0",
+                    "1000000000000000000"
+                ],
+                "gasLimit": "100,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [
+                    "0x03e8"
+                ],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "simulate-rewards-topup-2",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "egldValue": "1000000000000",
+                "function": "topUpRewards",
+                "arguments": [],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "claimRewards-with-referrer",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "function": "claim_reward",
+                "arguments": [
+                    "address:user",
+                    "1",
+                    "1000",
+                    "1000000000000000000",
+                    "address:ref"
+                ],
+                "gasLimit": "100,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [
+                    "0x07d0"
+                ],
+                "status": "0"
             }
         }
     ]

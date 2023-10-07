@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            9
-// Async Callback:                       1
-// Total number of exported functions:  11
+// Endpoints:                            1
+// Async Callback (empty):               1
+// Total number of exported functions:   3
 
 #![no_std]
 
@@ -19,19 +19,11 @@ multiversx_sc_wasm_adapter::allocator!();
 multiversx_sc_wasm_adapter::panic_handler!();
 
 multiversx_sc_wasm_adapter::endpoints! {
-    liquid_staking
+    akf_mock
     (
         init => init
-        addLiquidity => add_liquidity
-        claim_reward => claim_reward
-        delegate => delegate
-        getDSCAddress => get_dsc_address
-        register_ls_token => register_ls_token
-        getLsTokenId => ls_token
-        topUpRewards => top_up_rewards
-        getLsSupply => ls_token_supply
-        getRewardPerShare => reward_per_share
+        add_uru_egld => add_uru_egld
     )
 }
 
-multiversx_sc_wasm_adapter::async_callback! { liquid_staking }
+multiversx_sc_wasm_adapter::async_callback_empty! {}

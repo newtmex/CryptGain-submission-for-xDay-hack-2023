@@ -197,24 +197,28 @@
             "step": "checkState",
             "accounts": {
                 "address:ref": {
+                    "nonce": "*",
                     "balance": "0",
                     "storage": "*",
                     "code": "*",
                     "owner": "*"
                 },
                 "address:user": {
+                    "nonce": "*",
                     "balance": "0",
                     "storage": "*",
                     "code": "*",
                     "owner": "*"
                 },
                 "sc:akf": {
+                    "nonce": "*",
                     "balance": "0",
                     "storage": "*",
                     "code": "*",
                     "owner": "address:owner"
                 },
                 "sc:ls": {
+                    "nonce": "*",
                     "balance": "1000000000000",
                     "esdt": "*",
                     "storage": {
@@ -256,24 +260,28 @@
             "step": "checkState",
             "accounts": {
                 "address:ref": {
+                    "nonce": "*",
                     "balance": "0",
                     "storage": "*",
                     "code": "*",
                     "owner": "*"
                 },
                 "address:user": {
+                    "nonce": "*",
                     "balance": "923,000,000,000",
                     "storage": "*",
                     "code": "*",
                     "owner": "*"
                 },
                 "sc:akf": {
+                    "nonce": "*",
                     "balance": "46,200,000,000",
                     "storage": "*",
                     "code": "*",
                     "owner": "address:owner"
                 },
                 "sc:ls": {
+                    "nonce": "*",
                     "balance": "30,800,000,000",
                     "esdt": "*",
                     "storage": {
@@ -340,24 +348,28 @@
             "step": "checkState",
             "accounts": {
                 "address:ref": {
+                    "nonce": "*",
                     "balance": "30,800,000,000",
                     "storage": "*",
                     "code": "*",
                     "owner": "*"
                 },
                 "address:user": {
+                    "nonce": "*",
                     "balance": "1,846,000,000,000",
                     "storage": "*",
                     "code": "*",
                     "owner": "*"
                 },
                 "sc:akf": {
+                    "nonce": "*",
                     "balance": "92,400,000,000",
                     "storage": "*",
                     "code": "*",
                     "owner": "address:owner"
                 },
                 "sc:ls": {
+                    "nonce": "*",
                     "balance": "30,800,000,000",
                     "esdt": "*",
                     "storage": {

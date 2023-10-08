@@ -2,12 +2,12 @@ pub mod add_liquidity;
 pub mod claim_rewards;
 
 use multiversx_sc_scenario::{
-    scenario_model::{Account, ScCallStep, ScDeployStep, SetStateStep, TxExpect},
+    scenario_model::{Account, ScDeployStep, SetStateStep, TxExpect},
     ScenarioWorld,
 };
 use test_utils::{
     block_state::BlockState,
-    helpers::{big_num_pow_18, update_sc_acc},
+    helpers::{big_num_pow_18, update_sc_acc, call_step},
     test_setup::TestSetupTrait,
 };
 
@@ -139,13 +139,4 @@ impl TestSetupTrait for TestSetup {
     fn world(&mut self) -> &mut ScenarioWorld {
         &mut self.world
     }
-}
-
-fn call_step(tx_id: &str, from: &str, to: &str) -> ScCallStep {
-    ScCallStep {
-        id: tx_id.into(),
-        ..Default::default()
-    }
-    .from(from)
-    .to(to)
 }

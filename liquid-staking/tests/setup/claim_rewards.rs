@@ -4,11 +4,11 @@ use multiversx_sc_scenario::{
     DebugApi, WhiteboxContract,
 };
 use test_utils::{
-    helpers::{big_num_pow_18, check_account_allow_other_storages, check_step},
+    helpers::{big_num_pow_18, check_account_allow_other_storages, check_step, call_step},
     test_setup::TestSetupTrait,
 };
 
-use super::{call_step, TestSetup, AKF_ADDR, LS_ADDR, OWNER};
+use super::{TestSetup, AKF_ADDR, LS_ADDR, OWNER};
 
 #[test]
 fn claim_rewards() {

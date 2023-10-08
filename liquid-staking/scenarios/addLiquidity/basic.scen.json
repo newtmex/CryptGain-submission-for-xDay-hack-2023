@@ -180,6 +180,7 @@
                     "owner": "*"
                 },
                 "sc:ls": {
+                    "nonce": "*",
                     "balance": "10000000000000000",
                     "esdt": "*",
                     "storage": {
@@ -233,6 +234,7 @@
                     "owner": "*"
                 },
                 "sc:ls": {
+                    "nonce": "*",
                     "balance": "0",
                     "esdt": "*",
                     "storage": {

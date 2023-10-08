@@ -1,0 +1,504 @@
+{
+    "name": "Minting with Base Pair",
+    "steps": [
+        {
+            "step": "setState",
+            "accounts": {
+                "address:user1": {
+                    "balance": "0"
+                }
+            }
+        },
+        {
+            "step": "setState",
+            "accounts": {
+                "address:owner": {
+                    "balance": "1000000000000000000000000"
+                }
+            },
+            "newAddresses": [
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "0",
+                    "newAddress": "sc:pair_temp"
+                },
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "1",
+                    "newAddress": "sc:router"
+                },
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "4",
+                    "newAddress": "sc:g_token"
+                }
+            ]
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-pair-template",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../dex-outputs/pair.wasm",
+                "arguments": [
+                    "str:DUM-123456",
+                    "str:DUM-654321",
+                    "sc:zero",
+                    "sc:zero",
+                    "0",
+                    "0",
+                    "sc:zero"
+                ],
+                "gasLimit": "600,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-router",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../dex-outputs/router.wasm",
+                "arguments": [
+                    "sc:pair_temp"
+                ],
+                "gasLimit": "600,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "resume_router",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:router",
+                "function": "resume",
+                "arguments": [
+                    "sc:router"
+                ],
+                "gasLimit": "5,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "setPairCreationEnabled",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:router",
+                "function": "setPairCreationEnabled",
+                "arguments": [
+                    "true"
+                ],
+                "gasLimit": "5,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../output/g_token.wasm",
+                "arguments": [
+                    "sc:router",
+                    "str:BASETK-123456"
+                ],
+                "gasLimit": "600,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "registerGToken",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:g_token",
+                "egldValue": "5,000,000,000,000,000,000",
+                "function": "registerGToken",
+                "arguments": [
+                    "str:GToken",
+                    "str:GTK-123456",
+                    "18"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "setState",
+            "accounts": {
+                "sc:g_token": {
+                    "esdt": {
+                        "str:GTK-123456": {
+                            "instances": [],
+                            "roles": [
+                                "ESDTRoleLocalMint",
+                                "ESDTRoleLocalBurn"
+                            ]
+                        }
+                    },
+                    "storage": {
+                        "str:g_token": "str:GTK-123456"
+                    },
+                    "code": "file:../../output/g_token.wasm",
+                    "update": true
+                }
+            },
+            "newAddresses": [
+                {
+                    "creatorAddress": "sc:router",
+                    "creatorNonce": "0",
+                    "newAddress": "sc:ls_base_pair"
+                }
+            ]
+        },
+        {
+            "step": "scCall",
+            "id": "router_create_pair",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:g_token",
+                "function": "router_create_pair",
+                "arguments": [
+                    "str:LST-123456"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "router_issue_lp",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:g_token",
+                "egldValue": "5000000000000000000",
+                "function": "router_issue_lp",
+                "arguments": [
+                    "str:LST-123456",
+                    "str:LSLP",
+                    "str:LSLP-123456"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "status": "0"
+            }
+        },
+        {
+            "step": "setState",
+            "accounts": {
+                "address:owner": {
+                    "esdt": {
+                        "str:BASETK-123456": "4,000,000",
+                        "str:LST-123456": "400,000"
+                    }
+                },
+                "sc:ls_base_pair": {
+                    "esdt": {
+                        "str:LSLP-123456": {
+                            "instances": [],
+                            "roles": [
+                                "ESDTRoleLocalMint",
+                                "ESDTRoleLocalBurn"
+                            ]
+                        }
+                    },
+                    "storage": {
+                        "str:first_token_id": "str:LST-123456",
+                        "str:lpTokenIdentifier": "str:LSLP-123456",
+                        "str:second_token_id": "str:BASETK-123456"
+                    },
+                    "code": "file:../../dex-outputs/pair.wasm",
+                    "update": true
+                }
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "router_set_lp_local_roles",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:g_token",
+                "function": "router_set_lp_local_roles",
+                "arguments": [
+                    "str:LST-123456"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "pair_add_initial_liquidity",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:g_token",
+                "esdtValue": [
+                    {
+                        "tokenIdentifier": "str:LST-123456",
+                        "value": "400,000"
+                    },
+                    {
+                        "tokenIdentifier": "str:BASETK-123456",
+                        "value": "4,000,000"
+                    }
+                ],
+                "function": "pair_add_initial_liquidity",
+                "arguments": [
+                    "str:LST-123456"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "resume_ls_pair",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:router",
+                "function": "resume",
+                "arguments": [
+                    "sc:ls_base_pair"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "setState",
+            "accounts": {
+                "address:user1": {
+                    "esdt": {
+                        "str:BASETK-123456": "200,000"
+                    }
+                }
+            }
+        },
+        {
+            "step": "checkState",
+            "accounts": {
+                "address:user1": {
+                    "nonce": "*",
+                    "esdt": {
+                        "str:BASETK-123456": "200,000",
+                        "str:GTK-123456": "0",
+                        "str:LSLP-123456": "0",
+                        "str:LST-123456": "0",
+                        "+": ""
+                    },
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "sc:g_token": {
+                    "nonce": "*",
+                    "esdt": {
+                        "str:BASETK-123456": "0",
+                        "str:GTK-123456": {
+                            "instances": [
+                                {
+                                    "nonce": "0",
+                                    "balance": "4,000,000",
+                                    "attributes": "0x"
+                                }
+                            ],
+                            "roles": [
+                                "ESDTRoleLocalMint",
+                                "ESDTRoleLocalBurn"
+                            ]
+                        },
+                        "str:LSLP-123456": "399,000",
+                        "str:LST-123456": "0",
+                        "+": ""
+                    },
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "+": ""
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "first-mint",
+            "tx": {
+                "from": "address:user1",
+                "to": "sc:g_token",
+                "esdtValue": [
+                    {
+                        "tokenIdentifier": "str:BASETK-123456",
+                        "value": "20,000"
+                    }
+                ],
+                "function": "mint",
+                "arguments": [
+                    "1,50",
+                    "str:LST-123456"
+                ],
+                "gasLimit": "35,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "checkState",
+            "accounts": {
+                "address:user1": {
+                    "nonce": "*",
+                    "esdt": {
+                        "str:BASETK-123456": "180,000",
+                        "str:GTK-123456": "9,484",
+                        "str:LSLP-123456": "0",
+                        "str:LST-123456": "0",
+                        "+": ""
+                    },
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "sc:g_token": {
+                    "nonce": "*",
+                    "esdt": {
+                        "str:BASETK-123456": "11",
+                        "str:GTK-123456": {
+                            "instances": [
+                                {
+                                    "nonce": "0",
+                                    "balance": "4,000,500",
+                                    "attributes": "0x"
+                                }
+                            ],
+                            "roles": [
+                                "ESDTRoleLocalMint",
+                                "ESDTRoleLocalBurn"
+                            ]
+                        },
+                        "str:LSLP-123456": "399,996",
+                        "str:LST-123456": "0",
+                        "+": ""
+                    },
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "+": ""
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "sencond-mint",
+            "tx": {
+                "from": "address:user1",
+                "to": "sc:g_token",
+                "esdtValue": [
+                    {
+                        "tokenIdentifier": "str:BASETK-123456",
+                        "value": "20,000"
+                    }
+                ],
+                "function": "mint",
+                "arguments": [
+                    "1,50",
+                    "str:LST-123456"
+                ],
+                "gasLimit": "35,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0"
+            }
+        },
+        {
+            "step": "checkState",
+            "accounts": {
+                "address:user1": {
+                    "nonce": "*",
+                    "esdt": {
+                        "str:BASETK-123456": "160,000",
+                        "str:GTK-123456": "18,964",
+                        "str:LSLP-123456": "0",
+                        "str:LST-123456": "0",
+                        "+": ""
+                    },
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "sc:g_token": {
+                    "nonce": "*",
+                    "esdt": {
+                        "str:BASETK-123456": "23",
+                        "str:GTK-123456": {
+                            "instances": [
+                                {
+                                    "nonce": "0",
+                                    "balance": "4,000,999",
+                                    "attributes": "0x"
+                                }
+                            ],
+                            "roles": [
+                                "ESDTRoleLocalMint",
+                                "ESDTRoleLocalBurn"
+                            ]
+                        },
+                        "str:LSLP-123456": "400,989",
+                        "str:LST-123456": "0",
+                        "+": ""
+                    },
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "+": ""
+            }
+        }
+    ]
+}

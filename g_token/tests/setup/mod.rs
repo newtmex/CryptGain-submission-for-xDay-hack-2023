@@ -4,17 +4,22 @@ pub mod mint_with_base_pair;
 
 use std::ops::Mul;
 
+use multiversx_sc_scenario::scenario_model::{CheckAccount, CheckEsdtMap, TxExpect};
 pub use multiversx_sc_scenario::{
     multiversx_chain_vm::world_mock::BlockInfo,
     scenario_model::{Account, BytesKey, BytesValue, ScCallStep, ScDeployStep, SetStateStep},
     ScenarioWorld,
 };
-use test_utils::{block_state::BlockState, helpers::update_sc_acc};
+use test_utils::{
+    block_state::BlockState,
+    helpers::{call_step, check_account_with_owner, update_sc_acc},
+    test_setup::TestSetupTrait,
+};
 
 // Wasm Files
-pub const G_TOKEN_WASM: &str = "file:../output/g_token.wasm";
-pub const ROUTER_WASM: &str = "file:../dex-outputs/router.wasm";
-pub const PAIR_WASM: &str = "file:../dex-outputs/pair.wasm";
+pub const G_TOKEN_WASM: &str = "file:../../output/g_token.wasm";
+pub const ROUTER_WASM: &str = "file:../../dex-outputs/router.wasm";
+pub const PAIR_WASM: &str = "file:../../dex-outputs/pair.wasm";
 
 // TOKENS
 pub const BASE_PAIR: &str = "str:BASETK-123456";
@@ -98,51 +103,60 @@ impl TestSetup {
             )
             // Pair Template
             .sc_deploy(
-                ScDeployStep::new()
-                    .from(OWNER)
-                    .code(&pair_code)
-                    .argument("str:DUM-123456")
-                    .argument("str:DUM-654321")
-                    .argument("sc:zero")
-                    .argument("sc:zero")
-                    .argument("0")
-                    .argument("0")
-                    .argument("sc:zero"),
+                ScDeployStep {
+                    id: "deploy-pair-template".to_string(),
+                    ..Default::default()
+                }
+                .from(OWNER)
+                .code(&pair_code)
+                .gas_limit("600,000,000")
+                .argument("str:DUM-123456")
+                .argument("str:DUM-654321")
+                .argument("sc:zero")
+                .argument("sc:zero")
+                .argument("0")
+                .argument("0")
+                .argument("sc:zero"),
             )
-            // // Deploy Router
+            // Deploy Router
             .sc_deploy(
-                ScDeployStep::new()
-                    .from(OWNER)
-                    .code(router_code)
-                    .argument(pair_temp_addr),
+                ScDeployStep {
+                    id: "deploy-router".to_string(),
+                    ..Default::default()
+                }
+                .from(OWNER)
+                .gas_limit("600,000,000")
+                .code(router_code)
+                .argument(pair_temp_addr),
             )
             .sc_call(
-                ScCallStep::new()
-                    .to(router_addr)
-                    .from(OWNER)
+                call_step("resume_router", OWNER, router_addr)
                     .function("resume")
                     .argument(router_addr),
             )
             .sc_call(
-                ScCallStep::new()
-                    .to(router_addr)
-                    .from(OWNER)
+                call_step("setPairCreationEnabled", OWNER, router_addr)
                     .function("setPairCreationEnabled")
                     .argument("true"),
             )
             // Deploy GToken
             .sc_deploy(
-                ScDeployStep::new()
-                    .from(OWNER)
-                    .code(&g_token_code)
-                    .argument(router_addr)
-                    .argument(BASE_PAIR),
+                ScDeployStep {
+                    id: "deploy".to_string(),
+                    ..Default::default()
+                }
+                .from(OWNER)
+                .gas_limit("600,000,000")
+                .code(&g_token_code)
+                .argument(router_addr)
+                .argument(BASE_PAIR),
             )
             .sc_call(
                 g_token_call_step("registerGToken", OWNER)
                     .argument("str:GToken")
                     .argument(G_TOKEN)
                     .argument("18")
+                    .gas_limit("50,000,000")
                     .egld_value("5,000,000,000,000,000,000"),
             )
             .set_state_step(
@@ -156,13 +170,22 @@ impl TestSetup {
                     )
                     .new_address(router_addr, 0, ls_pair_addr),
             )
-            .sc_call(g_token_call_step("router_create_pair", OWNER).argument(LS_TOKEN))
+            .sc_call(
+                g_token_call_step("router_create_pair", OWNER)
+                    .argument(LS_TOKEN)
+                    .gas_limit("50,000,000"),
+            )
             .sc_call(
                 g_token_call_step("router_issue_lp", OWNER)
                     .argument(LS_TOKEN)
                     .argument("str:LSLP")
                     .argument(LSLP_TOKEN)
-                    .egld_value(num_bigint::BigUint::from(10u32).pow(18).mul(5u32)),
+                    .egld_value(num_bigint::BigUint::from(10u32).pow(18).mul(5u32))
+                    .gas_limit("50,000,000")
+                    .expect(TxExpect {
+                        build_from_response: false,
+                        ..TxExpect::ok()
+                    }),
             )
             .set_state_step(
                 SetStateStep::new()
@@ -188,19 +211,50 @@ impl TestSetup {
                             .esdt_balance(BASE_PAIR, "4,000,000"),
                     ),
             )
-            .sc_call(g_token_call_step("router_set_lp_local_roles", OWNER).argument(LS_TOKEN))
+            .sc_call(
+                g_token_call_step("router_set_lp_local_roles", OWNER)
+                    .argument(LS_TOKEN)
+                    .gas_limit("50,000,000"),
+            )
             .sc_call(
                 g_token_call_step("pair_add_initial_liquidity", OWNER)
                     .argument(LS_TOKEN)
                     .esdt_transfer(LS_TOKEN, 0, "400,000")
-                    .esdt_transfer(BASE_PAIR, 0, "4,000,000"),
+                    .esdt_transfer(BASE_PAIR, 0, "4,000,000")
+                    .gas_limit("50,000,000"),
             )
             .sc_call(
-                ScCallStep::new()
-                    .to(router_addr)
-                    .from(OWNER)
+                call_step("resume_ls_pair", OWNER, router_addr)
                     .function("resume")
-                    .argument(ls_pair_addr),
+                    .argument(ls_pair_addr)
+                    .gas_limit("50,000,000"),
             );
     }
+}
+
+impl TestSetupTrait for TestSetup {
+    fn world(&mut self) -> &mut ScenarioWorld {
+        &mut self.world
+    }
+}
+
+fn check_g_addr_g_token(balance_expr: &str) -> CheckAccount {
+    let mut check = check_account_with_owner(OWNER).esdt_nft_balance_and_attributes(
+        G_TOKEN,
+        "0",
+        balance_expr,
+        Option::<&str>::None,
+    );
+
+    match &mut check.esdt {
+        CheckEsdtMap::Unspecified => todo!(),
+        CheckEsdtMap::Star => todo!(),
+        CheckEsdtMap::Equal(map) => {
+            map.contents
+                .entry(G_TOKEN.into())
+                .and_modify(|v| v.add_roles_check(vec!["ESDTRoleLocalMint", "ESDTRoleLocalBurn"]));
+        },
+    }
+
+    check
 }

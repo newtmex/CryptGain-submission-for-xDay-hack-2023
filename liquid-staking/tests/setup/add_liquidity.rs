@@ -11,11 +11,11 @@ use multiversx_sc_scenario::{
     DebugApi,
 };
 use test_utils::{
-    helpers::{big_num_pow_18, check_account_allow_other_storages, check_step},
+    helpers::{big_num_pow_18, check_account_allow_other_storages, check_step, call_step},
     test_setup::TestSetupTrait,
 };
 
-use super::{call_step, TestSetup, LS_ADDR, LS_TOKEN, OWNER};
+use super::{TestSetup, LS_ADDR, LS_TOKEN, OWNER};
 
 #[test]
 fn add_liquidity() {

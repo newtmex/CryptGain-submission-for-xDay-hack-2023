@@ -11,7 +11,7 @@ use multiversx_sc_scenario::{
     DebugApi,
 };
 use test_utils::{
-    helpers::{big_num_pow_18, check_account_allow_other_storages, check_step, call_step},
+    helpers::{big_num_pow_18, call_step, check_account_allow_other_storages, check_step},
     test_setup::TestSetupTrait,
 };
 

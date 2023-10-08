@@ -7,7 +7,7 @@ use multiversx_sc_scenario::{
 };
 use test_utils::{
     block_state::BlockState,
-    helpers::{big_num_pow_18, update_sc_acc, call_step},
+    helpers::{big_num_pow_18, call_step, update_sc_acc},
     test_setup::TestSetupTrait,
 };
 

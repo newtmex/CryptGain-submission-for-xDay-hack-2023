@@ -1,5 +1,8 @@
 use multiversx_sc_scenario::{
-    mandos_system::run_trace::ScenarioTrace, scenario_model::{Scenario, AddressValue}, ScenarioWorld, multiversx_chain_vm::world_mock::AccountData,
+    mandos_system::run_trace::ScenarioTrace,
+    multiversx_chain_vm::world_mock::AccountData,
+    scenario_model::{AddressValue, Scenario},
+    ScenarioWorld,
 };
 
 pub trait TestSetupTrait {
@@ -30,7 +33,7 @@ pub trait TestSetupTrait {
             .clone()
     }
 
-    fn get_account_current_nonce(&mut self, address_expr: &str)->u64{
+    fn get_account_current_nonce(&mut self, address_expr: &str) -> u64 {
         self.get_account_data(address_expr).nonce
     }
 }

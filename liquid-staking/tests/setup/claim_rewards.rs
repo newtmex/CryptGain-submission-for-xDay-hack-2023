@@ -4,7 +4,7 @@ use multiversx_sc_scenario::{
     DebugApi, WhiteboxContract,
 };
 use test_utils::{
-    helpers::{big_num_pow_18, check_account_allow_other_storages, check_step, call_step},
+    helpers::{big_num_pow_18, call_step, check_account_allow_other_storages, check_step},
     test_setup::TestSetupTrait,
 };
 
@@ -121,7 +121,8 @@ fn claim_rewards() {
                 )
                 .whitebox_query(&ls_whitebox, |sc| {
                     rps = sc.reward_per_share().get().to_u64().unwrap();
-                    claim_reward_result.out = CheckValue::Equal(vec![CheckValue::Equal("2,000".into())]);
+                    claim_reward_result.out =
+                        CheckValue::Equal(vec![CheckValue::Equal("2,000".into())]);
                 })
                 .set_state_step(setup.block_state.move_block_epoch(20, None))
                 .sc_call(

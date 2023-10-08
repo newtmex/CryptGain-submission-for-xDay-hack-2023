@@ -78,7 +78,7 @@ pub trait GToken:
 
             (token_amount_min, other_amount_min)
         };
-        
+
         let (
             //
             (first_payment, first_token_amount_min),

@@ -12,21 +12,14 @@ pub mod funds;
 pub mod liquidity_pool;
 pub mod storage_cache;
 
-mod self_proxy {
-    #[multiversx_sc::proxy]
-    pub trait SelfProxy {
-        #[endpoint]
-        fn delegate(&self);
-    }
-}
-
 use crate::{
     akf_interaction::akf::ProxyTrait as _, delegation_interaction::delegation::ProxyTrait as _,
     storage_cache::StorageCache,
 };
 
-// 0.001 eGLD
-pub const MIN_EGLD_TO_DELEGATE: u64 = 1_000_000_000_000_000;
+// 0.1 eGLD
+pub const MIN_EGLD_TO_DELEGATE: u64 = 100_000_000_000_000_000;
+pub const DELEGATE_ACTION_GAS: u64 = 12_000_000;
 
 pub type AddLiquidityResultType<M> = MultiValue2<BigUint<M>, EsdtTokenPayment<M>>;
 
@@ -80,17 +73,6 @@ pub trait LiquidStaking:
 
         let result = (storage_cache.reward_per_share.clone(), ls_token);
 
-        if is_enough_to_delegate(&storage_cache.pending_delegation) {
-            storage_cache.commit();
-
-            let sc_own_addr = self.blockchain().get_sc_address();
-            self.self_proxy()
-                .contract(sc_own_addr)
-                .delegate()
-                .with_gas_limit(30_000_000)
-                .transfer_execute();
-        }
-
         result.into()
     }
 
@@ -104,7 +86,7 @@ pub trait LiquidStaking:
         delegated_egld: &BigUint,
         referrer: OptionalValue<ManagedAddress>,
     ) -> BigUint {
-        let gas_limit = 80_000_000;
+        let gas_limit = 50_000_000;
         require!(
             self.blockchain().get_gas_left() >= gas_limit,
             "not enough gas to initiate claim"
@@ -161,6 +143,38 @@ pub trait LiquidStaking:
     }
 
     #[endpoint]
+    #[payable("*")]
+    #[only_owner]
+    fn remove_liquidity(&self, _caller: &ManagedAddress, egld_for_plv: &BigUint) {
+        let storage_cache = StorageCache::new(self);
+        let payment = self.call_value().single_esdt();
+
+        require!(
+            storage_cache.ls_token_id.is_valid_esdt_identifier(),
+            "ERROR_LS_TOKEN_NOT_ISSUED"
+        );
+        require!(
+            payment.token_identifier == storage_cache.ls_token_id,
+            "ERROR_BAD_PAYMENT_TOKEN"
+        );
+        require!(payment.amount > 0, "ERROR_BAD_PAYMENT_AMOUNT");
+        require!(
+            egld_for_plv <= &payment.amount,
+            "PLV amount is larger than unDelegate amount"
+        );
+
+        // let egld_to_unstake = self.pool_remove_liquidity(&payment.amount, &mut storage_cache);
+        // // TODO
+        // // require!(
+        // //     egld_to_unstake >= MIN_EGLD_TO_DELEGATE,
+        // //     ERROR_INSUFFICIENT_UNSTAKE_AMOUNT
+        // // );
+        // self.burn_ls_token(&payment.amount);
+
+        //    TODO Send unstake tokkens
+    }
+
+    #[endpoint]
     fn delegate(&self) {
         let mut storage_cache = StorageCache::new(self);
 
@@ -169,11 +183,15 @@ pub trait LiquidStaking:
             storage_cache.commit();
 
             let gas_limit = self.blockchain().get_gas_left();
-            require!(gas_limit >= 25_000_000, "not enough gas for delegate");
+            let extra_gas = 2_000_000;
+            require!(
+                gas_limit >= (DELEGATE_ACTION_GAS + extra_gas),
+                "not enough gas for delegate"
+            );
 
             self.call_dsc()
                 .delegate()
-                .with_gas_limit(gas_limit)
+                .with_gas_limit(DELEGATE_ACTION_GAS)
                 .with_egld_transfer(delegate_amount.clone())
                 .async_call()
                 .with_callback(LiquidStaking::callbacks(self).delegate_callback(delegate_amount))
@@ -188,11 +206,11 @@ pub trait LiquidStaking:
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
         match result {
-            ManagedAsyncCallResult::Ok(()) => {},
+            ManagedAsyncCallResult::Ok(()) => {}
             ManagedAsyncCallResult::Err(_) => {
                 self.pending_delegation()
                     .update(|old| *old += delegate_amount);
-            },
+            }
         }
     }
 
@@ -217,8 +235,10 @@ pub trait LiquidStaking:
         });
     }
 
-    #[proxy]
-    fn self_proxy(&self) -> self_proxy::Proxy<Self::Api>;
+    #[view]
+    fn is_enough_to_delegate(&self) -> bool {
+        is_enough_to_delegate(&self.pending_delegation().get())
+    }
 
     #[storage_mapper("last_claim_epoch")]
     fn last_claim_epoch(&self) -> SingleValueMapper<u64>;

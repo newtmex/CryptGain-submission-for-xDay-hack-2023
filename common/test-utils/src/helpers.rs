@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use multiversx_sc_scenario::scenario_model::{
     Account, BytesKey, BytesValue, CheckAccount, CheckAccounts, CheckEsdtMap, CheckStateStep,
-    CheckStorage, CheckStorageDetails, CheckValue, ScCallStep,
+    CheckStorage, CheckStorageDetails, CheckValue, ScCallStep, ScDeployStep,
 };
 
 pub fn big_num_pow_18(num: u32) -> num_bigint::BigUint {
@@ -58,4 +58,12 @@ pub fn call_step(tx_id: &str, from: &str, to: &str) -> ScCallStep {
     }
     .from(from)
     .to(to)
+}
+
+pub fn deploy_step(tx_id: &str, from: &str) -> ScDeployStep {
+    ScDeployStep {
+        id: tx_id.into(),
+        ..Default::default()
+    }
+    .from(from)
 }

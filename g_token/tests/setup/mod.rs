@@ -253,7 +253,7 @@ fn check_g_addr_g_token(balance_expr: &str) -> CheckAccount {
             map.contents
                 .entry(G_TOKEN.into())
                 .and_modify(|v| v.add_roles_check(vec!["ESDTRoleLocalMint", "ESDTRoleLocalBurn"]));
-        },
+        }
     }
 
     check

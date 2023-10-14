@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            9
+// Endpoints:                           11
 // Async Callback:                       1
-// Total number of exported functions:  11
+// Total number of exported functions:  13
 
 #![no_std]
 
@@ -24,7 +24,9 @@ multiversx_sc_wasm_adapter::endpoints! {
         init => init
         addLiquidity => add_liquidity
         claim_reward => claim_reward
+        remove_liquidity => remove_liquidity
         delegate => delegate
+        is_enough_to_delegate => is_enough_to_delegate
         getDSCAddress => get_dsc_address
         register_ls_token => register_ls_token
         getLsTokenId => ls_token

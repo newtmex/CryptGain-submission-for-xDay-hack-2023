@@ -3,6 +3,8 @@ use router::{factory::PairTokens, ProxyTrait as _};
 
 multiversx_sc::imports!();
 
+// The GToken contract owns the Liquidity pools that it supports,
+// This enables Governance participants to make decissions that could affect these pools
 #[multiversx_sc::module]
 pub trait RouterInteraction: config::Config {
     #[only_owner]

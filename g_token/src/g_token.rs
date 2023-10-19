@@ -45,6 +45,10 @@ pub trait GToken:
         );
     }
 
+    /// Users can send any token supported as collateral to mint the GToken, paying a small fee
+    ///
+    /// This fee is dynamic, based on the liquidity distribution in each pool. This is to encourage users
+    /// to provide liquidity to pools with less liquidity, hence they mint more GTokens for their collateral
     #[endpoint]
     #[payable("*")]
     fn mint(&self, slippage: u64, opt_g_pair: OptionalValue<TokenIdentifier>) -> EsdtTokenPayment {
@@ -83,6 +87,7 @@ pub trait GToken:
             (token_amount_min, other_amount_min)
         };
 
+        // Split collateral so that we can add liquidity
         let (
             //
             (first_payment, first_token_amount_min),
@@ -133,6 +138,7 @@ pub trait GToken:
             .pair_get_tokens_for_given_position(&lp_payment.amount, call_pair)
             .into_tuple();
 
+        // Mint GToken based on the base pair
         let (g_payment, mint_fee) = {
             // g_token_amount to mint is based on the lp position amount of the base pair for the amount of lp tokens received
             let g_token_amount = if first_token_for_position.token_identifier == base_pair_id {
@@ -172,6 +178,7 @@ pub trait GToken:
         g_payment
     }
 
+    /// They can return the GToken for any of the token pair that they want, as long as tokens are in that pool
     #[endpoint]
     #[payable("*")]
     fn burn(

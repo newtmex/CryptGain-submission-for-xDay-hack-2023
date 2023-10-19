@@ -1,0 +1,259 @@
+{
+    "name": "Add liquidity scenario",
+    "steps": [
+        {
+            "step": "setState",
+            "accounts": {
+                "address:owner": {
+                    "balance": "100000000000000000000000"
+                }
+            },
+            "newAddresses": [
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "0",
+                    "newAddress": "sc:dsc"
+                },
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "1",
+                    "newAddress": "sc:ls"
+                },
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "2",
+                    "newAddress": "sc:akf"
+                },
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "3",
+                    "newAddress": "sc:delegation_proxy"
+                }
+            ]
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-dsc",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../delegation-outputs/delegation.wasm",
+                "arguments": [
+                    "sc:auction",
+                    "5,000",
+                    "0",
+                    "60",
+                    "1,000,000,000,000,000,000",
+                    "str:maximum delegate-able amount"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-ls",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../output/liquid-staking.wasm",
+                "arguments": [
+                    "sc:dsc",
+                    "sc:akf",
+                    "sc:delegation_proxy"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-akf",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../../akf-mock/output/akf-mock.wasm",
+                "arguments": [],
+                "gasLimit": "5,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-delegation-mock",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../../delegation-proxy-mock/output/delegation-proxy-mock.wasm",
+                "arguments": [],
+                "gasLimit": "5,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "register-ls-token",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "function": "register_ls_token",
+                "arguments": [
+                    "str:LSToken",
+                    "str:LST-123456"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "setState",
+            "accounts": {
+                "sc:ls": {
+                    "esdt": {
+                        "str:LST-123456": {
+                            "instances": [],
+                            "roles": [
+                                "ESDTRoleLocalMint",
+                                "ESDTRoleLocalBurn"
+                            ]
+                        }
+                    },
+                    "storage": {
+                        "str:ls_token": "str:LST-123456"
+                    },
+                    "code": "file:../../output/liquid-staking.wasm",
+                    "update": true
+                }
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "addLiquidity-with-lt-1eGLD",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "egldValue": "100000000000000000",
+                "function": "addLiquidity",
+                "arguments": [
+                    "100000000000000000"
+                ],
+                "gasLimit": "5,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [
+                    "0x",
+                    "0x0000000a4c53542d313233343536000000000000000000000008016345785d8a0000"
+                ],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "checkState",
+            "comment": "users-can-add-sub-1eGLD-as-liquidity",
+            "accounts": {
+                "address:owner": {
+                    "nonce": "6",
+                    "balance": "99999900000000000000000",
+                    "esdt": {
+                        "str:LST-123456": "100000000000000000",
+                        "+": ""
+                    },
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "sc:ls": {
+                    "nonce": "*",
+                    "balance": "100000000000000000",
+                    "esdt": "*",
+                    "storage": {
+                        "str:delegated_egld": "100000000000000000",
+                        "str:ls_token_supply": "100000000000000000",
+                        "str:pending_delegation": "100000000000000000",
+                        "+": ""
+                    },
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "+": ""
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "addLiquidity-trigger-delegate-to-dsc",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "egldValue": "1000000000000000000",
+                "function": "addLiquidity",
+                "arguments": [
+                    "1000000000000000000"
+                ],
+                "gasLimit": "45,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [
+                    "0x",
+                    "0x0000000a4c53542d3132333435360000000000000000000000080de0b6b3a7640000"
+                ],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "checkState",
+            "comment": "all-pending-delegations-should-be-cleared",
+            "accounts": {
+                "address:owner": {
+                    "nonce": "7",
+                    "balance": "99998900000000000000000",
+                    "esdt": {
+                        "str:LST-123456": "1100000000000000000",
+                        "+": ""
+                    },
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "sc:ls": {
+                    "nonce": "*",
+                    "balance": "1100000000000000000",
+                    "esdt": "*",
+                    "storage": {
+                        "str:delegated_egld": "1100000000000000000",
+                        "str:ls_token_supply": "1100000000000000000",
+                        "str:pending_delegation": "0x0f43fc2c04ee0000",
+                        "+": ""
+                    },
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "+": ""
+            }
+        }
+    ]
+}

@@ -1,0 +1,394 @@
+{
+    "name": "Claim rewards by simulating the right conditions",
+    "steps": [
+        {
+            "step": "setState",
+            "accounts": {
+                "address:owner": {
+                    "balance": "100000000000000000000000"
+                }
+            },
+            "newAddresses": [
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "0",
+                    "newAddress": "sc:dsc"
+                },
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "1",
+                    "newAddress": "sc:ls"
+                },
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "2",
+                    "newAddress": "sc:akf"
+                },
+                {
+                    "creatorAddress": "address:owner",
+                    "creatorNonce": "3",
+                    "newAddress": "sc:delegation_proxy"
+                }
+            ]
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-dsc",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../delegation-outputs/delegation.wasm",
+                "arguments": [
+                    "sc:auction",
+                    "5,000",
+                    "0",
+                    "60",
+                    "1,000,000,000,000,000,000",
+                    "str:maximum delegate-able amount"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-ls",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../output/liquid-staking.wasm",
+                "arguments": [
+                    "sc:dsc",
+                    "sc:akf",
+                    "sc:delegation_proxy"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-akf",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../../akf-mock/output/akf-mock.wasm",
+                "arguments": [],
+                "gasLimit": "5,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scDeploy",
+            "id": "deploy-delegation-mock",
+            "tx": {
+                "from": "address:owner",
+                "contractCode": "file:../../../delegation-proxy-mock/output/delegation-proxy-mock.wasm",
+                "arguments": [],
+                "gasLimit": "5,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "register-ls-token",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "function": "register_ls_token",
+                "arguments": [
+                    "str:LSToken",
+                    "str:LST-123456"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "setState",
+            "accounts": {
+                "sc:ls": {
+                    "esdt": {
+                        "str:LST-123456": {
+                            "instances": [],
+                            "roles": [
+                                "ESDTRoleLocalMint",
+                                "ESDTRoleLocalBurn"
+                            ]
+                        }
+                    },
+                    "storage": {
+                        "str:ls_token": "str:LST-123456"
+                    },
+                    "code": "file:../../output/liquid-staking.wasm",
+                    "update": true
+                }
+            }
+        },
+        {
+            "step": "setState",
+            "accounts": {
+                "address:ref": {},
+                "address:user": {}
+            },
+            "currentBlockInfo": {
+                "blockRound": "475200",
+                "blockEpoch": "33"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "addLiquidity-before-claim",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "egldValue": "1000000000000000000",
+                "function": "addLiquidity",
+                "arguments": [
+                    "1000000000000000000"
+                ],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [
+                    "0",
+                    "0x0000000a4c53542d3132333435360000000000000000000000080de0b6b3a7640000"
+                ],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "simulate-rewards-topup-1",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "egldValue": "1000000000000",
+                "function": "topUpRewards",
+                "arguments": [],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "checkState",
+            "accounts": {
+                "address:ref": {
+                    "nonce": "*",
+                    "balance": "0",
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "address:user": {
+                    "nonce": "*",
+                    "balance": "0",
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "sc:akf": {
+                    "nonce": "*",
+                    "balance": "0",
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "sc:ls": {
+                    "nonce": "*",
+                    "balance": "1000001000000000000",
+                    "esdt": "*",
+                    "storage": {
+                        "str:last_claim": "u64:0|u8:0|u64:0",
+                        "str:pending_delegation": "0x0de0b6b3a7640000",
+                        "+": ""
+                    },
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "+": ""
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "claimRewards-no-referrer",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "function": "claim_reward",
+                "arguments": [
+                    "address:user",
+                    "1",
+                    "0",
+                    "1000000000000000000"
+                ],
+                "gasLimit": "100,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [
+                    "1,000"
+                ],
+                "status": "0",
+                "refund": "5000"
+            }
+        },
+        {
+            "step": "checkState",
+            "accounts": {
+                "address:ref": {
+                    "nonce": "*",
+                    "balance": "0",
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "address:user": {
+                    "nonce": "*",
+                    "balance": "923,000,000,000",
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "sc:akf": {
+                    "nonce": "*",
+                    "balance": "46,200,000,000",
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "sc:ls": {
+                    "nonce": "*",
+                    "balance": "1000000030800000000",
+                    "esdt": "*",
+                    "storage": {
+                        "str:last_claim": "u64:0|u8:0|u64:0",
+                        "str:pending_delegation": "1000000030800000000",
+                        "+": ""
+                    },
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "+": ""
+            }
+        },
+        {
+            "step": "setState",
+            "currentBlockInfo": {
+                "blockRound": "763200",
+                "blockEpoch": "53"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "simulate-rewards-topup-2",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "egldValue": "1000000000000",
+                "function": "topUpRewards",
+                "arguments": [],
+                "gasLimit": "50,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [],
+                "status": "0",
+                "refund": "*"
+            }
+        },
+        {
+            "step": "scCall",
+            "id": "claimRewards-with-referrer",
+            "tx": {
+                "from": "address:owner",
+                "to": "sc:ls",
+                "function": "claim_reward",
+                "arguments": [
+                    "address:user",
+                    "1",
+                    "1000",
+                    "1000000000000000000",
+                    "address:ref"
+                ],
+                "gasLimit": "100,000,000",
+                "gasPrice": ""
+            },
+            "expect": {
+                "out": [
+                    "2,000"
+                ],
+                "status": "0",
+                "refund": "5000"
+            }
+        },
+        {
+            "step": "checkState",
+            "accounts": {
+                "address:ref": {
+                    "nonce": "*",
+                    "balance": "30,800,000,000",
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "address:user": {
+                    "nonce": "*",
+                    "balance": "1,846,000,000,000",
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "*"
+                },
+                "sc:akf": {
+                    "nonce": "*",
+                    "balance": "92,400,000,000",
+                    "storage": "*",
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "sc:ls": {
+                    "nonce": "*",
+                    "balance": "1000000030800000000",
+                    "esdt": "*",
+                    "storage": {
+                        "str:last_claim": "u64:0|u8:0|u64:0",
+                        "str:pending_delegation": "1000000030800000000",
+                        "+": ""
+                    },
+                    "code": "*",
+                    "owner": "address:owner"
+                },
+                "+": ""
+            }
+        }
+    ]
+}

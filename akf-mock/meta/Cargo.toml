@@ -1,0 +1,11 @@
+[package]
+name = "akf-mock-meta"
+version = "0.0.0"
+edition = "2021"
+publish = false
+[dependencies.akf-mock]
+path = ".."
+
+[dependencies.multiversx-sc-meta]
+git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"

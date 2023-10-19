@@ -1,7 +1,7 @@
 [package]
 name = "g_token"
 version = "0.0.0"
-authors = ["Levi Chimezie leve@techypharm.com"]
+authors = ["Levi Chimezie levi@techypharm.com"]
 edition = "2021"
 publish = false
 
@@ -10,6 +10,14 @@ path = "src/g_token.rs"
 
 [dependencies.multiversx-sc]
 git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"
+
+[dependencies.multiversx-sc-modules]
+git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"
+
+[dependencies.pausable]
+git = "https://github.com/newtmex/mx-exchange-sc.git"
 branch = "hackathon-feat"
 
 [dependencies.pair]
@@ -26,6 +34,7 @@ branch = "hackathon-feat"
 
 [dev-dependencies]
 num-bigint = "0.4.2"
+test-utils = { path = "../common/test-utils" }
 
 [dev-dependencies.multiversx-sc-scenario]
 git = "https://github.com/newtmex/mx-sdk-rs.git"

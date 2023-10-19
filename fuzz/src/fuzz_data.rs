@@ -247,7 +247,8 @@ impl FuzzerData {
                         .argument(g_pair)
                         .argument("str:LPToken")
                         .argument(lp_token)
-                        .egld_value(big_to_pow_18(5u32)),
+                        .egld_value(big_to_pow_18(5u32))
+                        .gas_limit("150,000,000"),
                 )
                 .set_state_step(
                     SetStateStep::new().put_account(
@@ -266,12 +267,12 @@ impl FuzzerData {
                         ),
                     ),
                 )
-                .sc_call(g_token_call_step("router_set_lp_local_roles", OWNER).argument(g_pair))
+                .sc_call(g_token_call_step("router_set_lp_local_roles", OWNER).argument(g_pair).gas_limit("150,000,000"))
                 .sc_call(
                     g_token_call_step("pair_add_initial_liquidity", OWNER)
                         .argument(g_pair)
                         .esdt_transfer(g_pair, 0, g_pair_deposit)
-                        .esdt_transfer(base_token, 0, base_pair_deposit),
+                        .esdt_transfer(base_token, 0, base_pair_deposit).gas_limit("150,000,000"),
                 )
                 .sc_call(
                     ScCallStep::new()

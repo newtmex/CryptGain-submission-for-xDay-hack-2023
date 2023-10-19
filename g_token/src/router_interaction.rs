@@ -3,6 +3,8 @@ use router::{factory::PairTokens, ProxyTrait as _};
 
 multiversx_sc::imports!();
 
+// The GToken contract owns the Liquidity pools that it supports,
+// This enables Governance participants to make decissions that could affect these pools
 #[multiversx_sc::module]
 pub trait RouterInteraction: config::Config {
     #[only_owner]
@@ -50,8 +52,18 @@ pub trait RouterInteraction: config::Config {
         let issue_cost = self.call_value().egld_value().clone_value();
         let pair_address = self.get_pair_info(&g_pair).address;
 
+        let gas_limit = 90_000_000;
+        let extra_gas = 5_000_000;
+
+        let gas_left = self.blockchain().get_gas_left();
+        require!(
+            gas_left >= (gas_limit + extra_gas),
+            "not enough gas for issue"
+        );
+
         self.call_router()
             .issue_lp_token(pair_address, lp_token_display_name, lp_token_ticker)
+            .with_gas_limit(gas_limit)
             .with_egld_transfer(issue_cost)
             .transfer_execute();
     }
@@ -60,10 +72,13 @@ pub trait RouterInteraction: config::Config {
     #[endpoint]
     fn router_set_lp_local_roles(&self, g_pair: TokenIdentifier) {
         let pair_address = self.get_pair_info(&g_pair).address;
+        let gas_limit = self.gas_for_router_call_with_async();
 
-        self.call_router()
+        let _: IgnoreValue = self
+            .call_router()
             .set_local_roles(pair_address)
-            .execute_on_dest_context()
+            .with_gas_limit(gas_limit)
+            .execute_on_dest_context();
     }
 
     fn set_router_addr(&self, addr: ManagedAddress) {
@@ -83,6 +98,19 @@ pub trait RouterInteraction: config::Config {
         );
 
         self.router_proxy_obj(addr)
+    }
+
+    fn gas_for_router_call_with_async(&self) -> u64 {
+        let gas_limit = 90_000_000;
+        let extra_gas = 5_000_000;
+
+        let gas_left = self.blockchain().get_gas_left();
+        require!(
+            gas_left >= (gas_limit + extra_gas),
+            "not enough gas for issue"
+        );
+
+        gas_limit
     }
 
     #[proxy]

@@ -37,6 +37,12 @@ pub trait PairInteractions: config::Config {
 
         self.add_g_supply(g_pair, &g_payment.amount, lp_payment);
         self.add_dust(&g_payment.token_identifier, g_payment.amount);
+
+        // TODO re enable when this is enabled on router contract
+        // let _: IgnoreValue = self
+        //     .pair_proxy_obj(pair_info.address)
+        //     .resume()
+        //     .execute_on_dest_context();
     }
 
     fn pair_swap_fixed_input(

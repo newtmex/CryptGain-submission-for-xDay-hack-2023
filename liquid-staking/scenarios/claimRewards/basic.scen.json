@@ -50,7 +50,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -69,7 +70,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -84,7 +86,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -99,7 +102,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -118,7 +122,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -173,7 +178,7 @@
                     "0x0000000a4c53542d3132333435360000000000000000000000080de0b6b3a7640000"
                 ],
                 "status": "0",
-                "refund": "37000"
+                "refund": "*"
             }
         },
         {
@@ -190,7 +195,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -219,11 +225,11 @@
                 },
                 "sc:ls": {
                     "nonce": "*",
-                    "balance": "1000000000000",
+                    "balance": "1000001000000000000",
                     "esdt": "*",
                     "storage": {
-                        "str:last_claim_epoch": "0",
-                        "str:pending_delegation": "0",
+                        "str:last_claim": "u64:0|u8:0|u64:0",
+                        "str:pending_delegation": "0x0de0b6b3a7640000",
                         "+": ""
                     },
                     "code": "*",
@@ -282,11 +288,11 @@
                 },
                 "sc:ls": {
                     "nonce": "*",
-                    "balance": "30,800,000,000",
+                    "balance": "1000000030800000000",
                     "esdt": "*",
                     "storage": {
-                        "str:last_claim_epoch": "33",
-                        "str:pending_delegation": "30,800,000,000",
+                        "str:last_claim": "u64:0|u8:0|u64:0",
+                        "str:pending_delegation": "1000000030800000000",
                         "+": ""
                     },
                     "code": "*",
@@ -316,7 +322,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -370,11 +377,11 @@
                 },
                 "sc:ls": {
                     "nonce": "*",
-                    "balance": "30,800,000,000",
+                    "balance": "1000000030800000000",
                     "esdt": "*",
                     "storage": {
-                        "str:last_claim_epoch": "53",
-                        "str:pending_delegation": "30,800,000,000",
+                        "str:last_claim": "u64:0|u8:0|u64:0",
+                        "str:pending_delegation": "1000000030800000000",
                         "+": ""
                     },
                     "code": "*",

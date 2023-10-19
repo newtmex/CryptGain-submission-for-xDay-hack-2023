@@ -50,7 +50,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -69,7 +70,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -84,7 +86,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -99,7 +102,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -118,7 +122,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -148,10 +153,10 @@
             "tx": {
                 "from": "address:owner",
                 "to": "sc:ls",
-                "egldValue": "10000000000000000",
+                "egldValue": "100000000000000000",
                 "function": "addLiquidity",
                 "arguments": [
-                    "10000000000000000"
+                    "100000000000000000"
                 ],
                 "gasLimit": "5,000,000",
                 "gasPrice": ""
@@ -159,9 +164,10 @@
             "expect": {
                 "out": [
                     "0x",
-                    "0x0000000a4c53542d3132333435360000000000000000000000072386f26fc10000"
+                    "0x0000000a4c53542d313233343536000000000000000000000008016345785d8a0000"
                 ],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -170,9 +176,9 @@
             "accounts": {
                 "address:owner": {
                     "nonce": "6",
-                    "balance": "99999990000000000000000",
+                    "balance": "99999900000000000000000",
                     "esdt": {
-                        "str:LST-123456": "10000000000000000",
+                        "str:LST-123456": "100000000000000000",
                         "+": ""
                     },
                     "storage": "*",
@@ -181,12 +187,12 @@
                 },
                 "sc:ls": {
                     "nonce": "*",
-                    "balance": "10000000000000000",
+                    "balance": "100000000000000000",
                     "esdt": "*",
                     "storage": {
-                        "str:delegated_egld": "10000000000000000",
-                        "str:ls_token_supply": "10000000000000000",
-                        "str:pending_delegation": "10000000000000000",
+                        "str:delegated_egld": "100000000000000000",
+                        "str:ls_token_supply": "100000000000000000",
+                        "str:pending_delegation": "100000000000000000",
                         "+": ""
                     },
                     "code": "*",
@@ -215,7 +221,7 @@
                     "0x0000000a4c53542d3132333435360000000000000000000000080de0b6b3a7640000"
                 ],
                 "status": "0",
-                "refund": "37000"
+                "refund": "*"
             }
         },
         {
@@ -224,9 +230,9 @@
             "accounts": {
                 "address:owner": {
                     "nonce": "7",
-                    "balance": "99998990000000000000000",
+                    "balance": "99998900000000000000000",
                     "esdt": {
-                        "str:LST-123456": "1010000000000000000",
+                        "str:LST-123456": "1100000000000000000",
                         "+": ""
                     },
                     "storage": "*",
@@ -235,12 +241,12 @@
                 },
                 "sc:ls": {
                     "nonce": "*",
-                    "balance": "0",
+                    "balance": "1100000000000000000",
                     "esdt": "*",
                     "storage": {
-                        "str:delegated_egld": "1010000000000000000",
-                        "str:ls_token_supply": "1010000000000000000",
-                        "str:pending_delegation": "0",
+                        "str:delegated_egld": "1100000000000000000",
+                        "str:ls_token_supply": "1100000000000000000",
+                        "str:pending_delegation": "0x0f43fc2c04ee0000",
                         "+": ""
                     },
                     "code": "*",

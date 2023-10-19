@@ -50,7 +50,14 @@ pub trait RouterInteraction: config::Config {
         let issue_cost = self.call_value().egld_value().clone_value();
         let pair_address = self.get_pair_info(&g_pair).address;
 
-        let gas_limit = self.gas_for_router_call_with_async();
+        let gas_limit = 90_000_000;
+        let extra_gas = 5_000_000;
+
+        let gas_left = self.blockchain().get_gas_left();
+        require!(
+            gas_left >= (gas_limit + extra_gas),
+            "not enough gas for issue"
+        );
 
         self.call_router()
             .issue_lp_token(pair_address, lp_token_display_name, lp_token_ticker)
@@ -65,10 +72,11 @@ pub trait RouterInteraction: config::Config {
         let pair_address = self.get_pair_info(&g_pair).address;
         let gas_limit = self.gas_for_router_call_with_async();
 
-        self.call_router()
+        let _: IgnoreValue = self
+            .call_router()
             .set_local_roles(pair_address)
             .with_gas_limit(gas_limit)
-            .transfer_execute();
+            .execute_on_dest_context();
     }
 
     fn set_router_addr(&self, addr: ManagedAddress) {
@@ -91,7 +99,7 @@ pub trait RouterInteraction: config::Config {
     }
 
     fn gas_for_router_call_with_async(&self) -> u64 {
-        let gas_limit = 30_000_000;
+        let gas_limit = 90_000_000;
         let extra_gas = 5_000_000;
 
         let gas_left = self.blockchain().get_gas_left();

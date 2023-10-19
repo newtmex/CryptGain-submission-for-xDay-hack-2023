@@ -19,6 +19,9 @@ branch = "hackathon-feat"
 [dependencies.dsc_module]
 path = "../common/dsc_module"
 
+[dependencies.utils_module]
+path = "../common/utils_module"
+
 [dev-dependencies]
 num-bigint = "0.4.2"
 test-utils = { path = "../common/test-utils" }

@@ -33,6 +33,9 @@ pub trait DSCProxy {
     #[endpoint(correctNodesStatus)]
     fn correct_nodes_status(&self);
 
+    #[endpoint(changeOwner)]
+    fn change_owner(&self, new_owner: ManagedAddress);
+
     #[view(getUserActiveStake)]
     fn get_user_active_stake(&self, user_address: ManagedAddress) -> BigUint;
 

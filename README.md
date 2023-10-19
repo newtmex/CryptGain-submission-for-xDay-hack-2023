@@ -83,7 +83,7 @@ Now, let's introduce the public smart contracts submitted for the hackathon:
 
 7. **Liquid Staking Smart Contract**: [Link to README](./liquid-staking/README.md)
 
-    The Liquid Staking Smart Contract introduces "cryptERD," CryptGain's liquid version of delegated $eGLD. It enables a flexible delegation process for delegators as it allows them to stake sub 1 $eGLD.
+    The Liquid Staking Smart Contract introduces "cryptERD," CryptGain's liquid version of delegated $eGLD. It enables a flexible delegation process for delegators as it allows them to stake sub 1 $eGLD. CryptERD will be part of the tokens used to provide collateral on the GToken Smart Contract
 
 ## Roadmap
 

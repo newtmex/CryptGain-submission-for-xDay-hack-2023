@@ -12,6 +12,14 @@ path = "src/g_token.rs"
 git = "https://github.com/newtmex/mx-sdk-rs.git"
 branch = "hackathon-feat"
 
+[dependencies.multiversx-sc-modules]
+git = "https://github.com/newtmex/mx-sdk-rs.git"
+branch = "hackathon-feat"
+
+[dependencies.pausable]
+git = "https://github.com/newtmex/mx-exchange-sc.git"
+branch = "hackathon-feat"
+
 [dependencies.pair]
 git = "https://github.com/newtmex/mx-exchange-sc.git"
 branch = "hackathon-feat"

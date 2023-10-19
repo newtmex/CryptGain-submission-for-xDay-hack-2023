@@ -181,7 +181,7 @@ impl TestSetup {
                     .argument("str:LSLP")
                     .argument(LSLP_TOKEN)
                     .egld_value(num_bigint::BigUint::from(10u32).pow(18).mul(5u32))
-                    .gas_limit("50,000,000")
+                    .gas_limit("150,000,000")
                     .expect(TxExpect {
                         build_from_response: false,
                         ..TxExpect::ok()
@@ -214,20 +214,20 @@ impl TestSetup {
             .sc_call(
                 g_token_call_step("router_set_lp_local_roles", OWNER)
                     .argument(LS_TOKEN)
-                    .gas_limit("50,000,000"),
+                    .gas_limit("150,000,000"),
             )
             .sc_call(
                 g_token_call_step("pair_add_initial_liquidity", OWNER)
                     .argument(LS_TOKEN)
                     .esdt_transfer(LS_TOKEN, 0, "400,000")
                     .esdt_transfer(BASE_PAIR, 0, "4,000,000")
-                    .gas_limit("50,000,000"),
+                    .gas_limit("150,000,000"),
             )
             .sc_call(
                 call_step("resume_ls_pair", OWNER, router_addr)
                     .function("resume")
                     .argument(ls_pair_addr)
-                    .gas_limit("50,000,000"),
+                    .gas_limit("150,000,000"),
             );
     }
 }

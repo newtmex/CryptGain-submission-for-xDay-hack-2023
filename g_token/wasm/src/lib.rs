@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            8
-// Async Callback (empty):               1
-// Total number of exported functions:  10
+// Endpoints:                           11
+// Async Callback:                       1
+// Total number of exported functions:  13
 
 #![no_std]
 
@@ -27,10 +27,13 @@ multiversx_sc_wasm_adapter::endpoints! {
         burn => burn
         pair_add_initial_liquidity => pair_add_initial_liquidity
         getPairGRatio => pair_g_ratio
+        getGPairInfo => pair_info
+        getGPairs => pair_map
+        getGTokenID => g_token
         router_create_pair => router_create_pair
         router_issue_lp => router_issue_lp
         router_set_lp_local_roles => router_set_lp_local_roles
     )
 }
 
-multiversx_sc_wasm_adapter::async_callback_empty! {}
+multiversx_sc_wasm_adapter::async_callback! { g_token }

@@ -6,6 +6,7 @@ multiversx_sc::derive_imports!();
 use pair::{AddLiquidityResultType, ProxyTrait as _, RemoveLiquidityResultType};
 
 pub mod config;
+pub mod errors;
 pub mod pair_interactions;
 pub mod router_interaction;
 pub mod slippage;
@@ -14,7 +15,10 @@ pub const MIN_MINT_DEPOSIT: u64 = 4_000;
 
 #[multiversx_sc::contract]
 pub trait GToken:
-    pair_interactions::PairInteractions + config::Config + router_interaction::RouterInteraction
+    pair_interactions::PairInteractions
+    + config::Config
+    + router_interaction::RouterInteraction
+    + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[init]
     fn init(&self, router_addr: ManagedAddress, base_pair_id: TokenIdentifier) {
@@ -43,7 +47,7 @@ pub trait GToken:
 
     #[endpoint]
     #[payable("*")]
-    fn mint(&self, slippage: u64, opt_g_pair: OptionalValue<TokenIdentifier>) {
+    fn mint(&self, slippage: u64, opt_g_pair: OptionalValue<TokenIdentifier>) -> EsdtTokenPayment {
         let caller = self.blockchain().get_caller();
 
         // Set payment swap amount
@@ -164,6 +168,8 @@ pub trait GToken:
 
         self.send()
             .direct_esdt(&caller, &g_payment.token_identifier, 0, &g_payment.amount);
+
+        g_payment
     }
 
     #[endpoint]

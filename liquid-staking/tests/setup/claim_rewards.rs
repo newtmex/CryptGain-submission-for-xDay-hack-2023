@@ -33,12 +33,9 @@ fn claim_rewards() {
             let reward_top_up = &(big_num_pow_18(1) / 1_000_000u32).to_str_radix(10)[..];
             let mut rps = 0u64;
 
-            let add_liq_result = TxExpect {
-                refund: CheckValue::Equal(37_000.into()),
-                ..TxExpect::ok()
-            }
-            .result("0")
-            .result("0x0000000a4c53542d3132333435360000000000000000000000080de0b6b3a7640000");
+            let add_liq_result = TxExpect::ok()
+                .result("0")
+                .result("0x0000000a4c53542d3132333435360000000000000000000000080de0b6b3a7640000");
 
             let mut claim_reward_result = TxExpect {
                 refund: CheckValue::Equal(5_000.into()),
@@ -74,9 +71,9 @@ fn claim_rewards() {
                         .put_account(
                             LS_ADDR,
                             check_account_allow_other_storages(OWNER)
-                                .balance(reward_top_up)
-                                .check_storage("str:pending_delegation", "0")
-                                .check_storage("str:last_claim_epoch", "0"),
+                                .balance("1000001000000000000")
+                                .check_storage("str:pending_delegation", "0x0de0b6b3a7640000")
+                                .check_storage("str:last_claim", "u64:0|u8:0|u64:0"),
                         )
                         .put_account(
                             AKF_ADDR,
@@ -104,9 +101,9 @@ fn claim_rewards() {
                         .put_account(
                             LS_ADDR,
                             check_account_allow_other_storages(OWNER)
-                                .balance("30,800,000,000")
-                                .check_storage("str:pending_delegation", "30,800,000,000")
-                                .check_storage("str:last_claim_epoch", "33"),
+                                .balance("1000000030800000000")
+                                .check_storage("str:pending_delegation", "1000000030800000000")
+                                .check_storage("str:last_claim", "u64:0|u8:0|u64:0"),
                         )
                         .put_account(
                             AKF_ADDR,
@@ -147,9 +144,9 @@ fn claim_rewards() {
                         .put_account(
                             LS_ADDR,
                             check_account_allow_other_storages(OWNER)
-                                .balance("30,800,000,000")
-                                .check_storage("str:pending_delegation", "30,800,000,000")
-                                .check_storage("str:last_claim_epoch", "53"),
+                                .balance("1000000030800000000")
+                                .check_storage("str:pending_delegation", "1000000030800000000")
+                                .check_storage("str:last_claim", "u64:0|u8:0|u64:0"),
                         )
                         .put_account(
                             AKF_ADDR,

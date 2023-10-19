@@ -1,9 +1,11 @@
 use router::factory::PairTokens;
 
+use crate::errors::ERR_PAIR_NOT_FOUND;
+
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-#[derive(TopDecode, TopEncode, NestedDecode, NestedEncode)]
+#[derive(TopDecode, TopEncode, NestedDecode, NestedEncode, TypeAbi)]
 pub struct PairInfo<M: ManagedTypeApi> {
     pub g_token_supply: BigUint<M>,
     pub lp_token_supply: BigUint<M>,
@@ -186,7 +188,7 @@ pub trait Config {
         let pair_g_supply = self
             .pair_map()
             .get(g_pair)
-            .unwrap_or_else(|| sc_panic!("pair info not found"))
+            .unwrap_or_else(|| sc_panic!(ERR_PAIR_NOT_FOUND))
             .g_token_supply;
         if pair_g_supply <= 1 {
             return 1;
@@ -199,18 +201,27 @@ pub trait Config {
         (ratio.to_u64().unwrap_or(GRatio::MAX as u64) as GRatio).clamp(1, GRatio::MAX)
     }
 
+    #[view(getGPairInfo)]
+    fn pair_info(&self, g_pair: &TokenIdentifier) -> PairInfo<Self::Api> {
+        self.pair_map()
+            .get(g_pair)
+            .unwrap_or_else(|| sc_panic!(ERR_PAIR_NOT_FOUND))
+    }
+
     #[storage_mapper("token_dust")]
     fn token_dust(&self, id: &TokenIdentifier) -> SingleValueMapper<BigUint>;
 
     #[storage_mapper("g_token_supply")]
     fn g_token_supply(&self) -> SingleValueMapper<BigUint>;
 
+    #[view(getGPairs)]
     #[storage_mapper("pair_map")]
     fn pair_map(&self) -> MapMapper<TokenIdentifier, PairInfo<Self::Api>>;
 
     #[storage_mapper("base_pair")]
     fn base_pair(&self) -> FungibleTokenMapper;
 
+    #[view(getGTokenID)]
     #[storage_mapper("g_token")]
     fn g_token(&self) -> FungibleTokenMapper;
 }

@@ -54,7 +54,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -71,7 +72,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -89,7 +91,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -107,7 +110,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -125,7 +129,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -146,7 +151,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -192,7 +198,8 @@
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -208,11 +215,12 @@
                     "str:LSLP",
                     "str:LSLP-123456"
                 ],
-                "gasLimit": "50,000,000",
+                "gasLimit": "150,000,000",
                 "gasPrice": ""
             },
             "expect": {
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -254,12 +262,13 @@
                 "arguments": [
                     "str:LST-123456"
                 ],
-                "gasLimit": "50,000,000",
+                "gasLimit": "150,000,000",
                 "gasPrice": ""
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -282,12 +291,13 @@
                 "arguments": [
                     "str:LST-123456"
                 ],
-                "gasLimit": "50,000,000",
+                "gasLimit": "150,000,000",
                 "gasPrice": ""
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -300,12 +310,13 @@
                 "arguments": [
                     "sc:ls_base_pair"
                 ],
-                "gasLimit": "50,000,000",
+                "gasLimit": "150,000,000",
                 "gasPrice": ""
             },
             "expect": {
                 "out": [],
-                "status": "0"
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -382,8 +393,11 @@
                 "gasPrice": ""
             },
             "expect": {
-                "out": [],
-                "status": "0"
+                "out": [
+                    "0x0000000a47544b2d313233343536000000000000000000000003016179"
+                ],
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -450,8 +464,11 @@
                 "gasPrice": ""
             },
             "expect": {
-                "out": [],
-                "status": "0"
+                "out": [
+                    "0x0000000a47544b2d313233343536000000000000000000000003015179"
+                ],
+                "status": "0",
+                "refund": "*"
             }
         },
         {
@@ -520,7 +537,8 @@
             },
             "expect": {
                 "status": "4",
-                "message": "str:Forbidden use of GToken"
+                "message": "str:Forbidden use of GToken",
+                "refund": "*"
             }
         }
     ]

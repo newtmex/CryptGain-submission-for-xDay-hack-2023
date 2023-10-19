@@ -28,10 +28,7 @@ pub trait DelegationModule {
     fn get_dsc_address(&self) -> ManagedAddress {
         require!(!self.dsc_address().is_empty(), "DSC Address not set");
 
-        let addr = self.dsc_address().get();
-        self.require_dsc_addr_valid(&addr);
-
-        addr
+        self.dsc_address().get()
     }
 
     #[proxy]

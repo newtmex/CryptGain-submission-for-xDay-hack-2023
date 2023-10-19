@@ -4,17 +4,17 @@
 multiversx_sc::imports!();
 
 use dsc_module::proxy::ProxyTrait as _;
-use funds::DIVISION_SAFTETY_CONST;
 
 pub mod akf_interaction;
 pub mod delegation_interaction;
 pub mod funds;
 pub mod liquidity_pool;
+pub mod reward_sharing;
 pub mod storage_cache;
 
 use crate::{
     akf_interaction::akf::ProxyTrait as _, delegation_interaction::delegation::ProxyTrait as _,
-    storage_cache::StorageCache,
+    reward_sharing::RewardShares, storage_cache::StorageCache,
 };
 
 // 0.1 eGLD
@@ -22,6 +22,7 @@ pub const MIN_EGLD_TO_DELEGATE: u64 = 100_000_000_000_000_000;
 pub const DELEGATE_ACTION_GAS: u64 = 12_000_000;
 
 pub type AddLiquidityResultType<M> = MultiValue2<BigUint<M>, EsdtTokenPayment<M>>;
+pub type LastClaimType = (u64, u8, u64);
 
 #[multiversx_sc::contract]
 pub trait LiquidStaking:
@@ -31,6 +32,7 @@ pub trait LiquidStaking:
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + akf_interaction::AkfInteraction
     + delegation_interaction::DelegationInteraction
+    + utils_module::UtilsModule
 {
     #[init]
     fn init(
@@ -42,6 +44,7 @@ pub trait LiquidStaking:
         self.set_dsc_address(dsc_addr);
         self.set_akf_address(akf_addr);
         self.set_delegation_address(delegation_proxy_addr);
+        self.last_claim().set_if_empty((0, 0, 0))
     }
 
     #[only_owner]
@@ -86,29 +89,19 @@ pub trait LiquidStaking:
         delegated_egld: &BigUint,
         referrer: OptionalValue<ManagedAddress>,
     ) -> BigUint {
-        let gas_limit = 50_000_000;
-        require!(
-            self.blockchain().get_gas_left() >= gas_limit,
-            "not enough gas to initiate claim"
-        );
-
-        self.try_claim_from_delegation_proxy();
-
         let current_rps = self.reward_per_share().get();
+        let mut reward = reward_sharing::compute_reward(rps, &current_rps, delegated_egld);
 
-        if &current_rps > rps {
-            let mut reward = (&current_rps - rps) * delegated_egld / DIVISION_SAFTETY_CONST;
+        if reward > 0 {
             self.rewards_reserve().update(|reserve| {
                 if *reserve >= reward {
-                    // 7.7% of reward
-                    let bonus_value = &reward * 77u32 / 1_000u32;
-                    let user_value = &reward - &bonus_value;
+                    let RewardShares {
+                        uru_value,
+                        user_value,
+                        referrer_value,
+                    } = reward_sharing::split_reward(&reward);
 
                     {
-                        // 40% of bonus
-                        let referrer_value = &bonus_value * 4u32 / 10u32;
-                        let uru_value = bonus_value - &referrer_value;
-
                         if uru_value > 0 {
                             let () = self
                                 .call_akf()
@@ -134,6 +127,7 @@ pub trait LiquidStaking:
                 }
             });
 
+            // If rewards were not used
             if reward > 0 {
                 return rps.clone();
             }
@@ -214,25 +208,39 @@ pub trait LiquidStaking:
         }
     }
 
+    #[only_owner]
+    #[endpoint]
     fn try_claim_from_delegation_proxy(&self) {
-        self.last_claim_epoch().update(|last_epoch| {
-            let current_epoch = self.blockchain().get_block_epoch();
+        self.last_claim()
+            .update(|(last_epoch, claim_times, last_block)| {
+                let current_epoch = self.blockchain().get_block_epoch();
 
-            if *last_epoch < current_epoch {
-                *last_epoch = current_epoch;
+                if *last_epoch < current_epoch {
+                    *last_epoch = current_epoch;
+                    // reset
+                    *claim_times = 0;
+                }
 
-                let gas_limit = 30_000_000;
-                require!(
-                    self.blockchain().get_gas_left() > gas_limit,
-                    "not enough gas to initiate delegation call"
-                );
+                // Update claim times
+                *claim_times += 1;
 
-                self.call_delegation()
-                    .claim_rewards()
-                    .with_gas_limit(gas_limit)
-                    .transfer_execute();
-            }
-        });
+                // The two claims ensures that rewards are collected from DSC through DSC Proxy,
+                // then DSC Proxy calls liquid staking endpoint `topUpRewards`
+                if *claim_times <= 2 {
+                    let gas_limit = 15_000_000;
+                    require!(
+                        self.blockchain().get_gas_left() > gas_limit,
+                        "not enough gas to initiate claim call"
+                    );
+
+                    *last_block = self.blockchain().get_block_round();
+
+                    self.call_delegation()
+                        .claim_rewards()
+                        .with_gas_limit(gas_limit)
+                        .transfer_execute();
+                }
+            });
     }
 
     #[view]
@@ -240,8 +248,26 @@ pub trait LiquidStaking:
         is_enough_to_delegate(&self.pending_delegation().get())
     }
 
-    #[storage_mapper("last_claim_epoch")]
-    fn last_claim_epoch(&self) -> SingleValueMapper<u64>;
+    #[view(totalClaimable)]
+    fn total_claimable(&self, props: MultiValueEncoded<MultiValue2<BigUint, BigUint>>) -> BigUint {
+        self.require_queried();
+
+        let mut claimable = BigUint::zero();
+        let current_rps = self.reward_per_share().get();
+
+        for prop in props {
+            let (rps, delegated_egld) = prop.into_tuple();
+
+            claimable += reward_sharing::compute_reward(&rps, &current_rps, &delegated_egld);
+        }
+
+        claimable
+    }
+
+    /// Stores (last_claim_epoch, claim_count, last_claim_block)
+    #[view(lastClaim)]
+    #[storage_mapper("last_claim")]
+    fn last_claim(&self) -> SingleValueMapper<LastClaimType>;
 }
 
 fn is_enough_to_delegate<M: ManagedTypeApi>(amt: &BigUint<M>) -> bool {

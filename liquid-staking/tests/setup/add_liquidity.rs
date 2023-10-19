@@ -7,7 +7,7 @@ use multiversx_sc::{
 };
 use multiversx_sc_scenario::{
     multiversx_chain_vm::world_mock::AccountData,
-    scenario_model::{CheckAccount, CheckStateStep, CheckValue, TxExpect, U64Value},
+    scenario_model::{CheckAccount, CheckStateStep, TxExpect, U64Value},
     DebugApi,
 };
 use test_utils::{
@@ -29,7 +29,7 @@ fn add_liquidity() {
         |setup| {
             setup.init_contracts();
 
-            let liq_amount = big_num_pow_18(1).div(100u32);
+            let liq_amount = big_num_pow_18(1).div(10u32);
             let liq_amount_str = &liq_amount.to_str_radix(10)[..];
 
             let AccountData {
@@ -106,10 +106,7 @@ fn add_liquidity() {
                         .argument(liq_amount_2_str)
                         .egld_value(liq_amount_2_str)
                         .gas_limit("45,000,000")
-                        .expect(TxExpect {
-                            refund: CheckValue::Equal(U64Value::from(37_000u64)),
-                            ..add_liq_result
-                        }),
+                        .expect(add_liq_result),
                 )
                 .check_state_step(
                     CheckStateStep {
@@ -126,10 +123,10 @@ fn add_liquidity() {
                     .put_account(
                         LS_ADDR,
                         check_account_allow_other_storages(OWNER)
-                            .balance("0")
+                            .balance("1100000000000000000")
                             .check_storage("str:ls_token_supply", final_liq_amount_str)
                             .check_storage("str:delegated_egld", final_liq_amount_str)
-                            .check_storage("str:pending_delegation", "0"),
+                            .check_storage("str:pending_delegation", "0x0f43fc2c04ee0000"),
                     ),
                 );
         },

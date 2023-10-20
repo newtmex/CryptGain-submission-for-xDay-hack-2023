@@ -72,7 +72,14 @@ pub trait RouterInteraction: config::Config {
     #[endpoint]
     fn router_set_lp_local_roles(&self, g_pair: TokenIdentifier) {
         let pair_address = self.get_pair_info(&g_pair).address;
-        let gas_limit = self.gas_for_router_call_with_async();
+        let gas_limit = 70_000_000;
+        let extra_gas = 10_000_000;
+
+        let gas_left = self.blockchain().get_gas_left();
+        require!(
+            gas_left >= (gas_limit + extra_gas),
+            "not enough gas for set roles"
+        );
 
         let _: IgnoreValue = self
             .call_router()
@@ -98,19 +105,6 @@ pub trait RouterInteraction: config::Config {
         );
 
         self.router_proxy_obj(addr)
-    }
-
-    fn gas_for_router_call_with_async(&self) -> u64 {
-        let gas_limit = 90_000_000;
-        let extra_gas = 5_000_000;
-
-        let gas_left = self.blockchain().get_gas_left();
-        require!(
-            gas_left >= (gas_limit + extra_gas),
-            "not enough gas for issue"
-        );
-
-        gas_limit
     }
 
     #[proxy]

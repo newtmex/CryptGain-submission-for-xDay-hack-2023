@@ -2,7 +2,12 @@
 
 [StakeAfrik](https://stakeafrik.com) presents CryptGain, a groundbreaking ecosystem designed to revolutionize liquidity provision and PoS blockchain validation and delegation. The project aims to ensure adequate liquidity provision for supported tokens and democratize participation in blockchain validation by enabling individuals passionate about securing PoS blockchains, such as MultiversX, to participate actively without providing a significant initial stake. With a commitment to transparency, innovation, and community engagement, CryptGain introduces a wealth of benefits to its key stakeholders.
 
-![CryptGain Logo](logo.svg)
+![Dashboard](dashboard.png)
+_Dashboard View_ 
+
+![Governance](governance.png)
+_Governance View_
+
 
 ## Project Overview
 
@@ -89,16 +94,18 @@ Now, let's introduce the public smart contracts submitted for the hackathon:
 
 CryptGain's ambitious roadmap includes expanding beyond MultiversX to bridge native tokens from other PoS blockchains into the MultiversX ecosystem. This venture will involve the development of token bridges and deploying CryptGain on those blockchain networks.
 
-- **Month 1-6**: Testing and Improvement via CGC as described here: https://twitter.com/StakeAfrik/status/1641455247112695815?t=3moRIXCumU8hxlJoipXxKg&s=08, then project launch.
+-   **Month 1-6**: Testing and Improvement via CGC as described here: https://twitter.com/StakeAfrik/status/1641455247112695815?t=3moRIXCumU8hxlJoipXxKg&s=08, then project launch.
 
-- **Month 7-9:** Launch liquidity support programs for partner projects, attracting diverse tokens into the ecosystem.
+-   **Month 7-9:** Launch liquidity support programs for partner projects, attracting diverse tokens into the ecosystem.
 
-- **Month 10-12:** Implement community-driven governance improvements, enabling users to influence ecosystem decisions effectively.
+-   **Month 10-12:** Implement community-driven governance improvements, enabling users to influence ecosystem decisions effectively.
 
-- **Month 13-15:** Initiate cross-chain compatibility efforts, preparing for the integration of tokens from additional PoS blockchains.
+-   **Month 13-15:** Initiate cross-chain compatibility efforts, preparing for the integration of tokens from additional PoS blockchains.
 
 Join us on our journey to transform the blockchain landscape and empower validators, delegators, and tokens within the CryptGain ecosystem.
 
 [Join the CryptGain Community](https://t.me/stakeafrik)
 
 [Interact with the devnet version](https://pub-devnet.cryptgain.com)
+
+![CryptGain Logo](logo.svg)
